@@ -52,7 +52,7 @@ header h1 small{display:block;font-size:12px;font-weight:400;color:var(--mute)}
 .pill.paused{background:var(--amber);color:#fff}.pill.paused i{background:#fff}
 
 .chip{display:inline-flex;align-items:center;gap:4px;border-radius:7px;padding:2px 7px;font-size:11px;font-weight:700;background:var(--lilacL);color:var(--ink);white-space:nowrap}
-.chip.f1{background:#FFE9D6}.chip.f2{background:#E0F0FF}.chip.f3{background:#E7F6E3}.chip.f5{background:#F1E7FB}.chip.f7{background:#FDE6F1}
+.chip.f1{background:#FFE9D6}.chip.f2{background:#E0F0FF}.chip.f3{background:#E7F6E3}.chip.f5{background:#F1E7FB}.chip.f7{background:#FDE6F1}.chip.f71{background:#DDF3F1}.chip.f72{background:#FFF3C4}.chip.f73{background:#E4E7FB}
 .chip.pa{background:var(--ink);color:#fff}.chip.pb{background:#E6E9EF;color:var(--mute)}
 .chip.st-queued{background:#E6E9EF;color:var(--mute)}
 .chip.st-released{background:var(--amberL);color:#9A5A08}
@@ -202,15 +202,21 @@ const CFG = {
     { n: 2, label: "Zone B" },
     { n: 3, label: "Zone A and Expo Village" },
     { n: 5, label: "Back Office" },
-    { n: 7, label: "MOC, Site Control, TCC, LCC and TOC" }
+    // Floor 7 is split into four desks, each with its own floor manager. The ids stay numbers so the database is unchanged.
+    { n: 7,  name: "Floor 7 MOC", short: "F7 MOC", label: "MOC Facilitator (MOC, Silver, Site Control)" },
+    { n: 71, name: "Floor 7 TCC", short: "F7 TCC", label: "TCC floor manager" },
+    { n: 72, name: "Floor 7 LCC", short: "F7 LCC", label: "LCC floor manager" },
+    { n: 73, name: "Floor 7 TOC", short: "F7 TOC", label: "TOC and IT Helpdesk floor manager" }
   ],
+  // Short words for links, for example injects.html?floor=tcc
+  FLOOR_ALIAS: { moc: 7, f7: 7, tcc: 71, lcc: 72, toc: 73 },
   // Where a contacted person sits. The floor manager picks the place, the page works out the floor.
   SPACES: [
     { id: "moc", label: "MOC (Silver)", floor: 7 },
     { id: "sc",  label: "Site Control", floor: 7 },
-    { id: "tcc", label: "TCC", floor: 7 },
-    { id: "lcc", label: "LCC", floor: 7 },
-    { id: "toc", label: "TOC or IT Helpdesk", floor: 7 },
+    { id: "tcc", label: "TCC", floor: 71 },
+    { id: "lcc", label: "LCC", floor: 72 },
+    { id: "toc", label: "TOC or IT Helpdesk", floor: 73 },
     { id: "bo",  label: "Back Office", floor: 5 },
     { id: "za",  label: "Zone A", floor: 3 },
     { id: "exv", label: "Expo Village or VOC", floor: 3 },
@@ -228,10 +234,10 @@ const CFG = {
 
 const DEMO_INJECTS = [
   { id: "D1", ord: 1, phase: "Demo", sim: "09:00", sim_min: 540, title: "Demo inject: a visitor reports a lost bag at the gate", zone: "Zone E", venue: "Entrance B", space: "Floor 1 · Zone E", floors: [1], lead: "Security", support: "Guest Services, Crowd Management", note: "" },
-  { id: "D2", ord: 2, phase: "Demo", sim: "09:10", sim_min: 550, title: "Demo inject: a delivery van blocks a service road", zone: "Zone B", venue: "Service road 2", space: "Floor 2 · Zone B / Floor 7 · LCC", floors: [2, 7], lead: "Logistics", support: "Security, Venue Management", note: "" },
+  { id: "D2", ord: 2, phase: "Demo", sim: "09:10", sim_min: 550, title: "Demo inject: a delivery van blocks a service road", zone: "Zone B", venue: "Service road 2", space: "Floor 2 · Zone B / Floor 7 · LCC", floors: [2, 72], lead: "Logistics", support: "Security, Venue Management", note: "" },
   { id: "D3", ord: 3, phase: "Demo", sim: "09:20", sim_min: 560, title: "Demo inject: a pavilion asks for extra cleaning", zone: "Zone A", venue: "Hall 2", space: "Floor 3 · Zone A", floors: [3], lead: "Cleaning & Waste", support: "Official Participants", note: "" },
   { id: "D4", ord: 4, phase: "Demo", sim: "09:30", sim_min: 570, title: "Demo inject: a printer fails at the back office", zone: "All / Site Wide", venue: "Back office", space: "Floor 5 · Back Office", floors: [5], lead: "Technology", support: "Accreditation", note: "This is a dummy note to show how notes appear." },
-  { id: "D5", ord: 5, phase: "Demo", sim: "09:40", sim_min: 580, title: "Demo inject: a bus arrives early at the terminus", zone: "Off-Site", venue: "Expo terminus", space: "Floor 7 · TCC", floors: [7], lead: "Mobility & Transport (TMO)", support: "MOC", note: "" },
+  { id: "D5", ord: 5, phase: "Demo", sim: "09:40", sim_min: 580, title: "Demo inject: a bus arrives early at the terminus", zone: "Off-Site", venue: "Expo terminus", space: "Floor 7 · TCC", floors: [71], lead: "Mobility & Transport (TMO)", support: "MOC", note: "" },
   { id: "D6", ord: 6, phase: "Demo", sim: "09:50", sim_min: 590, title: "Demo inject: a resident reports a noisy neighbour", zone: "Expo Village", venue: "Residential building", space: "Floor 3 · Expo Village VOC", floors: [3], lead: "Expo Village", support: "Security", note: "" }
 ];
 
@@ -251,7 +257,12 @@ function fmtT(iso, sec) {
 }
 function minsBetween(a, b) { if (!a || !b) return null; return Math.round((new Date(b) - new Date(a)) / 60000); }
 function fmtGame(min) { if (min == null || isNaN(min)) return "--:--"; min = Math.floor(((min % 1440) + 1440) % 1440); return String(Math.floor(min / 60)).padStart(2, "0") + ":" + String(min % 60).padStart(2, "0"); }
-function floorChip(n) { return n == null ? "" : '<span class="chip f' + n + '">Floor ' + n + "</span>"; }
+function fRec(n) { return CFG.FLOORS.find((x) => x.n === +n) || null; }
+function FN(n) { if (n == null || n === "") return ""; const f = fRec(n); return f && f.name ? f.name : "Floor " + n; }
+function FS(n) { const f = fRec(n); return f && f.short ? f.short : "F" + n; }
+function FNs(a) { return (a || []).map(FN).join(", "); }
+function spaceTxt(i) { const m = /^Floor (\d+)$/.exec(i.space || ""); return m ? FN(m[1]) : i.space || ""; }
+function floorChip(n) { return n == null ? "" : '<span class="chip f' + n + '">' + FN(n) + "</span>"; }
 const ST = { queued: "Queued", released: "Released", inplay: "In play", closing: "Close requested", closed: "Closed", skipped: "Skipped" };
 function stChip(s) { return '<span class="chip st-' + s + '">' + (ST[s] || s) + "</span>"; }
 function prChip(p) { return p ? '<span class="chip p' + p.toLowerCase() + '">' + p + "</span>" : ""; }
@@ -440,10 +451,10 @@ function countUpdates(id) { return evsFor(id).filter((e) => e.kind === "update")
 function evText(e) {
   const t = e.target ? H(e.target) : "", b = e.body ? H(e.body) : "";
   switch (e.kind) {
-    case "release": return "SIM Control released it to Floor " + H(e.floor) + ".";
+    case "release": return "SIM Control released it to " + H(FN(e.floor)) + ".";
     case "ack": return "The floor manager opened the card.";
     case "deliver": return "Delivered" + (t ? " to <b>" + t + "</b>" : "") + (e.method ? " (" + H(e.method) + ")" : "") + "." + (b ? " " + b : "");
-    case "update": return (e.method ? "<b>" + H(e.method) + ".</b> " : "") + (t ? "The player contacted <b>" + t + "</b>" + (e.target_floor ? " (Floor " + e.target_floor + ")" : "") + ". " : "") + b;
+    case "update": return (e.method ? "<b>" + H(e.method) + ".</b> " : "") + (t ? "The player contacted <b>" + t + "</b>" + (e.target_floor ? " (" + FN(e.target_floor) + ")" : "") + ". " : "") + b;
     case "moc": return "The MOC has been informed.";
     case "suggest": return "The floor asks to close it." + (b ? " Outcome: " + b : "");
     case "close": return "SIM Control closed it." + (b ? " " + b : "");
@@ -459,7 +470,7 @@ function evText(e) {
     default: return H(e.kind) + (b ? ": " + b : "");
   }
 }
-function evWho(e) { return (e.actor ? H(e.actor) : "") + (e.floor && e.role === "floor" ? " · Floor " + e.floor : e.role === "control" ? " · SIM Control" : ""); }
+function evWho(e) { return (e.actor ? H(e.actor) : "") + (e.floor && e.role === "floor" ? " · " + FN(e.floor) : e.role === "control" ? " · SIM Control" : ""); }
 
 /* ---------------------------------------------------------------- notifications */
 function notify(fresh) {
@@ -469,11 +480,11 @@ function notify(fresh) {
     if (ME.view === "floor") {
       const mine = e.actor === ME.name && e.floor === ME.floor;
       if (e.kind === "release" && e.floor === ME.floor) { POP.push(i.id); }
-      else if (e.kind === "release" && (i.floors || []).indexOf(ME.floor) >= 0) { toast("Inject " + i.id + " went to Floor " + e.floor + ". It may reach your floor."); SND.play("soft"); }
-      else if (e.kind === "update" && e.target_floor === ME.floor && !mine) { toast("Floor " + (e.floor || "?") + ": the player contacted " + (e.target || "your floor") + " about inject " + i.id + "."); SND.play("soft"); }
+      else if (e.kind === "release" && (i.floors || []).indexOf(ME.floor) >= 0) { toast("Inject " + i.id + " went to " + FN(e.floor) + ". It may reach your desk."); SND.play("soft"); }
+      else if (e.kind === "update" && e.target_floor === ME.floor && !mine) { toast((e.floor ? FN(e.floor) : "Another floor") + ": the player contacted " + (e.target || "your floor") + " about inject " + i.id + "."); SND.play("soft"); }
       else if (e.kind === "close" && (i.involved || []).indexOf(ME.floor) >= 0) { toast("SIM Control closed inject " + i.id + "."); SND.play("soft"); }
     } else {
-      if (e.role === "floor" && e.kind === "suggest") { toast("Floor " + e.floor + " asks to close inject " + i.id + "."); SND.play("soft"); }
+      if (e.role === "floor" && e.kind === "suggest") { toast(FN(e.floor) + " asks to close inject " + i.id + "."); SND.play("soft"); }
       else if (e.role === "floor" && e.kind === "deliver") { SND.play("soft"); }
     }
   });
@@ -486,7 +497,7 @@ function showPop() {
   const i = DB.by[POP[0]]; if (!i || i.status !== "released" || i.rel_floor !== ME.floor) { POP.shift(); return showPop(); }
   SND.play("loud");
   $("pmodal").innerHTML =
-    '<div class="muted">New inject for Floor ' + ME.floor + "</div>" +
+    '<div class="muted">New inject for ' + H(FN(ME.floor)) + "</div>" +
     '<h3><span class="id">' + H(i.id) + "</span> " + H(i.title) + "</h3>" +
     '<table class="kvt"><tr><td>Where</td><td>' + H(i.venue || "") + (i.zone ? " (" + H(i.zone) + ")" : "") + "</td></tr>" +
     "<tr><td>Lead department</td><td><b>" + H(i.lead || "") + "</b></td></tr>" +
@@ -516,7 +527,7 @@ function optGroup(el, multi) {
 }
 function spacesHtml() {
   let h = "";
-  CFG.SPACES.forEach((s) => { h += '<button data-v="' + s.id + '">' + H(s.label) + (s.floor ? " · F" + s.floor : "") + "</button>"; });
+  CFG.SPACES.forEach((s) => { h += '<button data-v="' + s.id + '">' + H(s.label) + (s.floor ? " · " + FS(s.floor) : "") + "</button>"; });
   return h;
 }
 
@@ -575,7 +586,7 @@ function closeModalFor(id) {
   const i = DB.by[id]; if (!i) return;
   const ask = evsFor(id).filter((e) => e.kind === "suggest").pop();
   modal('<h3>Close inject ' + H(i.id) + "</h3><div class='muted'>" + H(i.title) + "</div>" +
-    (ask ? '<div class="note">Floor ' + H(ask.floor) + " asked to close it" + (ask.body ? ": " + H(ask.body) : ".") + "</div>" : "") +
+    (ask ? '<div class="note">' + H(FN(ask.floor)) + " asked to close it" + (ask.body ? ": " + H(ask.body) : ".") + "</div>" : "") +
     '<label class="f">Closing note (optional)</label><textarea id="cBody" placeholder="For example: the loop is closed, the MOC logged it in the IMP."></textarea>' +
     '<div class="foot"><button class="ghost" id="mx">Cancel</button><button class="teal big" id="cGo">Close for everyone</button></div>');
   $("mx").onclick = closeModal;
@@ -589,7 +600,7 @@ function detailModal(id) {
   const keepNote = $("eNote") && document.activeElement === $("eNote") ? $("eNote").value : null;
   let btns = "";
   if (ctl) {
-    if (i.status === "queued") btns += '<button class="pink" data-a="release">Release to Floor ' + H(i.floors[0] || "?") + "</button><button data-a=\"skip\">Skip</button>";
+    if (i.status === "queued") btns += '<button class="pink" data-a="release">Release to ' + H(i.floors[0] ? FN(i.floors[0]) : "?") + "</button><button data-a=\"skip\">Skip</button>";
     if (i.status === "released") btns += '<button data-a="unrelease">Recall</button><button data-a="skip">Skip</button>';
     if (["inplay", "closing", "released"].indexOf(i.status) >= 0) btns += '<button class="teal" data-a="close">Close</button>';
     if (["closed", "closing"].indexOf(i.status) >= 0) btns += '<button data-a="reopen">Open again</button>';
@@ -605,10 +616,10 @@ function detailModal(id) {
     '<table class="kvt">' +
     "<tr><td>Exercise time</td><td>" + H(i.sim || "") + (i.mel_real ? ' <span class="muted">(MEL real time ' + H(i.mel_real) + ")</span>" : "") + "</td></tr>" +
     "<tr><td>Where</td><td>" + H(i.venue || "") + (i.zone ? " (" + H(i.zone) + ")" : "") + "</td></tr>" +
-    "<tr><td>Floor and space</td><td>" + H(i.space || "") + "</td></tr>" +
+    "<tr><td>Floor and space</td><td>" + H(spaceTxt(i)) + "</td></tr>" +
     "<tr><td>Lead department</td><td><b>" + H(i.lead || "") + "</b></td></tr>" +
     "<tr><td>Also involved</td><td>" + H(i.support || "") + "</td></tr>" +
-    "<tr><td>Times</td><td>Released " + (fmtT(i.released_at) || "-") + (i.rel_floor ? " to Floor " + i.rel_floor : "") + " · Delivered " + (fmtT(i.delivered_at) || "-") + " · MOC informed " + (fmtT(i.moc_at) || "-") + " · Closed " + (fmtT(i.closed_at) || "-") + "</td></tr>" +
+    "<tr><td>Times</td><td>Released " + (fmtT(i.released_at) || "-") + (i.rel_floor ? " to " + FN(i.rel_floor) : "") + " · Delivered " + (fmtT(i.delivered_at) || "-") + " · MOC informed " + (fmtT(i.moc_at) || "-") + " · Closed " + (fmtT(i.closed_at) || "-") + "</td></tr>" +
     (i.delivered_to ? "<tr><td>Delivered to</td><td>" + H(i.delivered_to) + " (" + H(i.delivered_how || "") + ") by " + H(i.delivered_by || "") + "</td></tr>" : "") +
     "<tr><td>Floors involved</td><td>" + ((i.involved || []).map(floorChip).join(" ") || "-") + "</td></tr>" +
     "</table>" +
@@ -679,7 +690,7 @@ function renderControl() {
       '<div class="box"><h2>Queue<span class="sp"></span><select class="sm" id="fPhase"><option value="all">All phases</option><option>Phase 1</option><option>Phase 2</option><option>Ad hoc</option>' + (DEMO ? "<option>Demo</option>" : "") + '</select><label class="muted" style="text-transform:none;letter-spacing:0"><input type="checkbox" id="fB"> Hide B</label></h2>' +
       '<input type="search" id="fQ" placeholder="Search ID, title or department" style="margin-bottom:8px"><div class="scroll" id="queue"></div></div>' +
       '<div class="box"><h2>Live board<span class="sp"></span><span class="muted" style="text-transform:none;letter-spacing:0" id="liveN"></span></h2><div class="scroll" id="live"></div></div>' +
-      '<div class="box"><h2>Feed<span class="sp"></span><select class="sm" id="fFloor"><option value="all">All floors</option>' + CFG.FLOORS.map((f) => '<option value="' + f.n + '">Floor ' + f.n + "</option>").join("") + '</select></h2><div class="scroll feed" id="feed"></div></div>' +
+      '<div class="box"><h2>Feed<span class="sp"></span><select class="sm" id="fFloor"><option value="all">All floors</option>' + CFG.FLOORS.map((f) => '<option value="' + f.n + '">' + H(FN(f.n)) + "</option>").join("") + '</select></h2><div class="scroll feed" id="feed"></div></div>' +
       "</div>";
     $("fPhase").onchange = (e) => { CTL.phase = e.target.value; renderControl(); };
     $("fB").onchange = (e) => { CTL.hideB = e.target.checked; renderControl(); };
@@ -713,7 +724,7 @@ function renderControl() {
     }
     const fl = x.floors || [];
     const pick = fl.length > 1 || x.adhoc || !fl.length
-      ? '<select class="sm" data-relfloor="' + H(x.id) + '">' + (fl.length ? fl : []).concat(CFG.FLOORS.map((f) => f.n).filter((n) => fl.indexOf(n) < 0)).map((n) => '<option value="' + n + '"' + (String(CTL["rf_" + x.id] || fl[0]) === String(n) ? " selected" : "") + ">Floor " + n + "</option>").join("") + "</select>"
+      ? '<select class="sm" data-relfloor="' + H(x.id) + '">' + (fl.length ? fl : []).concat(CFG.FLOORS.map((f) => f.n).filter((n) => fl.indexOf(n) < 0)).map((n) => '<option value="' + n + '"' + (String(CTL["rf_" + x.id] || fl[0]) === String(n) ? " selected" : "") + ">" + H(FN(n)) + "</option>").join("") + "</select>"
       : "";
     return '<div class="qrow ' + cls + '"><div class="t">' + H(x.sim || "--") + (x.mel_real ? "<small>real " + H(x.mel_real) + "</small>" : "") + "</div>" +
       '<div><div class="ti"><span class="id">' + H(x.id) + "</span> " + H(x.title) + '</div><div class="meta">' + fl.map(floorChip).join("") + prChip(x.priority) + badge +
@@ -757,7 +768,7 @@ function drawOnline() {
   const el = $("online"); if (!el) return;
   el.innerHTML = CFG.FLOORS.map((f) => {
     const ppl = presence.filter((p) => p.role === "floor" && p.floor === f.n);
-    return '<span class="chip' + (ppl.length ? " on" : "") + '" title="' + H(ppl.map((p) => p.name).join(", ")) + '"><i></i>F' + f.n + (ppl.length ? " " + H(ppl.map((p) => p.name).join(", ")) : "") + "</span>";
+    return '<span class="chip' + (ppl.length ? " on" : "") + '" title="' + H(ppl.map((p) => p.name).join(", ")) + '"><i></i>' + H(FS(f.n)) + (ppl.length ? " " + H(ppl.map((p) => p.name).join(", ")) : "") + "</span>";
   }).join("") + (DEMO ? "" : "");
 }
 async function ctlClick(e) {
@@ -765,7 +776,7 @@ async function ctlClick(e) {
   e.preventDefault();
   const c = b.dataset.c, id = b.dataset.id;
   if (c === "detail") return detailModal(id);
-  if (c === "release") { b.disabled = true; const x = DB.by[id]; const fl = CTL["rf_" + id] || (x.floors || [])[0]; const r = await act("release", id, { floor: fl ? String(fl) : null }, null); if (r) toast("Inject " + id + " released to Floor " + fl + "."); else b.disabled = false; return; }
+  if (c === "release") { b.disabled = true; const x = DB.by[id]; const fl = CTL["rf_" + id] || (x.floors || [])[0]; const r = await act("release", id, { floor: fl ? String(fl) : null }, null); if (r) toast("Inject " + id + " released to " + FN(fl) + "."); else b.disabled = false; return; }
   if (c === "unrelease") return act("unrelease", id, {}, null);
   if (c === "close") return closeModalFor(id);
   if (c === "prio") { const x = DB.by[id]; const nx = x.priority === "A" ? "B" : x.priority === "B" ? "" : "A"; return act("priority", id, { p: nx }, null); }
@@ -777,7 +788,7 @@ async function ctlClick(e) {
 function adhocModal() {
   modal('<h3>Ad hoc inject</h3><p class="muted">Use this for Plan B or C, or for something the players create. It gets an X number.</p>' +
     '<label class="f">Title</label><input type="text" id="aT" placeholder="For example: second fire alarm in Hall 5">' +
-    '<label class="f">Floor</label><select id="aF">' + CFG.FLOORS.map((f) => '<option value="' + f.n + '">Floor ' + f.n + " · " + H(f.label) + "</option>").join("") + "</select>" +
+    '<label class="f">Floor</label><select id="aF">' + CFG.FLOORS.map((f) => '<option value="' + f.n + '">' + H(FN(f.n)) + " · " + H(f.label) + "</option>").join("") + "</select>" +
     '<label class="f">Lead department (optional)</label><input type="text" id="aL">' +
     '<label class="f">Note for the floor manager (optional)</label><textarea id="aN"></textarea>' +
     '<div class="foot"><button class="ghost" id="mx">Cancel</button><button id="aQ">Add to queue</button><button class="pink" id="aR">Create and release now</button></div>');
@@ -800,10 +811,10 @@ function saveFL() { try { localStorage.setItem("inj1-flist", JSON.stringify({ sc
 function renderFloor() {
   const f = CFG.FLOORS.find((x) => x.n === ME.floor) || { n: ME.floor, label: "" };
   if (!FL.built) {
-    $("app").innerHTML = headerHtml("Floor " + f.n + " · " + f.label, H(ME.name) + " · Floor manager" + (DEMO ? " · Demo" : "")) +
+    $("app").innerHTML = headerHtml(FN(f.n) + " · " + f.label, H(ME.name) + " · Floor manager" + (DEMO ? " · Demo" : "")) +
       '<div class="fwrap"><div id="fbody"></div>' +
       '<div class="fsec"><h2>Full scenario list <span class="n" id="sN">0</span></h2>' +
-      '<div class="sbar"><div class="opts" id="sScope"><button data-v="mine">Floor ' + f.n + '</button><button data-v="all">All floors</button></div>' +
+      '<div class="sbar"><div class="opts" id="sScope"><button data-v="mine">' + H(FN(f.n)) + '</button><button data-v="all">All floors</button></div>' +
       '<div class="opts" id="sShow"><button data-v="all">All</button><button data-v="upcoming">Upcoming</button><button data-v="live">Live now</button><button data-v="played">Played</button></div></div>' +
       '<div class="sbar" style="margin-top:8px"><input type="search" id="fQ" placeholder="Search ID, title or department" style="flex:1;min-width:180px">' +
       '<label class="muted" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="sMask"> Hide titles of upcoming injects</label></div>' +
@@ -895,12 +906,12 @@ function exportXlsx() {
   const rows1 = I.map((x) => {
     const r = firstEv(x.id, "release"), d = firstEv(x.id, "deliver"), lu = lastUpdate(x.id);
     const plain = (e) => (e ? fmtT(e.at) + " " + evText(e).replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'") : "");
-    return [x.id, x.phase, x.sim, x.mel_real, x.title, x.lead, x.support, (x.floors || []).join(", "), x.priority, ST[x.status], x.rel_floor, fmtT(x.released_at, 1), r && r.game, fmtT(x.delivered_at, 1), d && d.game, x.delivered_by, x.delivered_to, x.delivered_how, fmtT(x.moc_at, 1), fmtT(x.closing_at, 1), fmtT(x.closed_at, 1),
-      minsBetween(x.released_at, x.delivered_at), minsBetween(x.delivered_at, x.moc_at), minsBetween(x.delivered_at, x.closed_at), countUpdates(x.id), (x.involved || []).join(", "), x.note, plain(lu)];
+    return [x.id, x.phase, x.sim, x.mel_real, x.title, x.lead, x.support, FNs(x.floors), x.priority, ST[x.status], FN(x.rel_floor), fmtT(x.released_at, 1), r && r.game, fmtT(x.delivered_at, 1), d && d.game, x.delivered_by, x.delivered_to, x.delivered_how, fmtT(x.moc_at, 1), fmtT(x.closing_at, 1), fmtT(x.closed_at, 1),
+      minsBetween(x.released_at, x.delivered_at), minsBetween(x.delivered_at, x.moc_at), minsBetween(x.delivered_at, x.closed_at), countUpdates(x.id), FNs(x.involved), x.note, plain(lu)];
   });
   const head2 = ["Real time", "Exercise time", "Inject", "Title", "Action", "Floor", "By", "Method", "Contacted", "Contacted floor", "Text"];
   const KN = { release: "Released", ack: "Card opened", deliver: "Delivered", update: "Update", moc: "MOC informed", suggest: "Close requested", close: "Closed", reopen: "Opened again", skip: "Skipped", unskip: "Back to queue", unrelease: "Recalled", priority: "Priority", wall: "Video wall flag", note: "SIM Control note", editnote: "Note changed", adhoc: "Ad hoc created" };
-  const rows2 = DB.events.map((e) => [fmtT(e.at, 1), e.game, e.inject_id, (DB.by[e.inject_id] || {}).title, KN[e.kind] || e.kind, e.floor, e.actor, e.method, e.target, e.target_floor, e.body]);
+  const rows2 = DB.events.map((e) => [fmtT(e.at, 1), e.game, e.inject_id, (DB.by[e.inject_id] || {}).title, KN[e.kind] || e.kind, FN(e.floor), e.actor, e.method, e.target, FN(e.target_floor), e.body]);
   const blob = XLSX([{ name: "Injects", head: head1, rows: rows1, widths: [7, 9, 10, 9, 48, 22, 30, 9, 8, 14, 9, 10, 10, 10, 10, 14, 26, 12, 10, 10, 10, 10, 10, 10, 9, 10, 30, 50] },
                      { name: "Log", head: head2, rows: rows2, widths: [10, 10, 8, 44, 16, 7, 14, 13, 24, 9, 60] }]);
   const a = document.createElement("a");
@@ -962,11 +973,11 @@ function zipStore(files) {
 function gate(msg) {
   const last = lsRead(LS + ":last") || {};
   const wantView = qs.get("view") === "control" ? "control" : qs.get("floor") ? "floor" : last.view || "floor";
-  const wantFloor = +(qs.get("floor") || (wantView === "floor" ? last.floor : 0) || 0) || null;
+  const qf = (qs.get("floor") || "").toLowerCase(); const wantFloor = +(CFG.FLOOR_ALIAS[qf] || qf || (wantView === "floor" ? last.floor : 0) || 0) || null;
   const saved = lsRead(lsKey(wantView, wantFloor));
   if (saved && saved.pin && !msg) {
     $("app").innerHTML = '<div class="gate"><img src="' + LOGO + '" alt=""><h2>Welcome back, ' + H(saved.name) + "</h2>" +
-      '<p class="muted">' + (saved.view === "control" ? "SIM Control" : "Floor " + saved.floor + " · floor manager") + (DEMO ? " · Demo mode" : "") + '</p><p class="muted" style="margin-top:8px">Press Start to switch on the sound and connect.</p>' +
+      '<p class="muted">' + (saved.view === "control" ? "SIM Control" : FN(saved.floor) + " · floor manager") + (DEMO ? " · Demo mode" : "") + '</p><p class="muted" style="margin-top:8px">Press Start to switch on the sound and connect.</p>' +
       '<div class="err" id="gErr"></div><div class="row" style="margin-top:8px"><button class="ghost" id="gChange">Change</button><span class="sp"></span><button class="ink big" id="gGo">Start</button></div></div>';
     $("gChange").onclick = () => { localStorage.removeItem(lsKey(wantView, wantFloor)); localStorage.removeItem(LS + ":last"); history.replaceState(null, "", location.pathname + (DEMO ? "?demo=1" : "")); location.reload(); };
     $("gGo").onclick = () => login(saved, $("gGo"));
@@ -974,7 +985,7 @@ function gate(msg) {
   }
   $("app").innerHTML = '<div class="gate"><img src="' + LOGO + '" alt=""><h2>SIM1 inject tracker</h2><p class="muted">Sign in once on this device.' + (DEMO ? " Demo mode: any PIN works for a floor, and the PIN <b>control</b> opens SIM Control." : "") + "</p>" +
     '<label class="f">I am</label><select id="gView"><option value="floor">A floor manager</option><option value="control">SIM Control</option></select>' +
-    '<div id="gFloorW"><label class="f">My floor</label><select id="gFloor">' + CFG.FLOORS.map((f) => '<option value="' + f.n + '">Floor ' + f.n + " · " + H(f.label) + "</option>").join("") + "</select></div>" +
+    '<div id="gFloorW"><label class="f">My floor</label><select id="gFloor">' + CFG.FLOORS.map((f) => '<option value="' + f.n + '">' + H(FN(f.n)) + " · " + H(f.label) + "</option>").join("") + "</select></div>" +
     '<label class="f">My name</label><input type="text" id="gName" placeholder="For example: Ilkin" autocomplete="name">' +
     '<label class="f">PIN</label><input type="password" id="gPin" autocomplete="current-password">' +
     '<div class="err" id="gErr">' + H(msg || "") + '</div><div class="row" style="margin-top:8px"><span class="sp"></span><button class="ink big" id="gGo">Start</button></div></div>';
