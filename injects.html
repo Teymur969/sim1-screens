@@ -52,7 +52,7 @@ header h1 small{display:block;font-size:12px;font-weight:400;color:var(--mute)}
 .pill.paused{background:var(--amber);color:#fff}.pill.paused i{background:#fff}
 
 .chip{display:inline-flex;align-items:center;gap:4px;border-radius:7px;padding:2px 7px;font-size:11px;font-weight:700;background:var(--lilacL);color:var(--ink);white-space:nowrap}
-.chip.f1{background:#FFE9D6}.chip.f2{background:#E0F0FF}.chip.f3{background:#E7F6E3}.chip.f5{background:#F1E7FB}.chip.f7{background:#FDE6F1}.chip.f71{background:#DDF3F1}.chip.f72{background:#FFF3C4}.chip.f73{background:#E4E7FB}
+.chip.f1{background:#FFE9D6}.chip.f2{background:#E0F0FF}.chip.f3{background:#E7F6E3}.chip.f5{background:#F1E7FB}.chip.f7{background:#FDE6F1}.chip.f71{background:#DDF3F1}.chip.tv{background:#fff;border:1.5px dashed #7781B8;color:#3B437A}.chip.f72{background:#FFF3C4}.chip.f73{background:#E4E7FB}
 .chip.pa{background:var(--ink);color:#fff}.chip.pb{background:#E6E9EF;color:var(--mute)}
 .chip.st-queued{background:#E6E9EF;color:var(--mute)}
 .chip.st-released{background:var(--amberL);color:#9A5A08}
@@ -233,7 +233,7 @@ const CFG = {
 };
 
 const DEMO_INJECTS = [
-  { id: "D1", ord: 1, phase: "Demo", sim: "09:00", sim_min: 540, title: "Demo inject: a visitor reports a lost bag at the gate", zone: "Zone E", venue: "Entrance B", space: "Floor 1 · Zone E", floors: [1], lead: "Security", support: "Guest Services, Crowd Management", note: "" },
+  { id: "D1", ord: 1, phase: "Demo", sim: "09:00", sim_min: 540, title: "Demo inject: a visitor reports a lost bag at the gate", zone: "Zone E", venue: "Entrance B", space: "Floor 1 · Zone E", floors: [1], travel: [2], lead: "Security", support: "Guest Services, Crowd Management", note: "" },
   { id: "D2", ord: 2, phase: "Demo", sim: "09:10", sim_min: 550, title: "Demo inject: a delivery van blocks a service road", zone: "Zone B", venue: "Service road 2", space: "Floor 2 · Zone B / Floor 7 · LCC", floors: [2, 72], lead: "Logistics", support: "Security, Venue Management", note: "" },
   { id: "D3", ord: 3, phase: "Demo", sim: "09:20", sim_min: 560, title: "Demo inject: a pavilion asks for extra cleaning", zone: "Zone A", venue: "Hall 2", space: "Floor 3 · Zone A", floors: [3], lead: "Cleaning & Waste", support: "Official Participants", note: "" },
   { id: "D4", ord: 4, phase: "Demo", sim: "09:30", sim_min: 570, title: "Demo inject: a printer fails at the back office", zone: "All / Site Wide", venue: "Back office", space: "Floor 5 · Back Office", floors: [5], lead: "Technology", support: "Accreditation", note: "This is a dummy note to show how notes appear." },
@@ -262,6 +262,7 @@ function FN(n) { if (n == null || n === "") return ""; const f = fRec(n); return
 function FS(n) { const f = fRec(n); return f && f.short ? f.short : "F" + n; }
 function FNs(a) { return (a || []).map(FN).join(", "); }
 function spaceTxt(i) { const m = /^Floor (\d+)$/.exec(i.space || ""); return m ? FN(m[1]) : i.space || ""; }
+function travelChips(x, me) { return (x.travel || []).map((n) => '<span class="chip tv" title="Expected to travel to this floor">' + (n === me ? "Expected here" : "→ " + FN(n)) + "</span>").join(""); }
 function floorChip(n) { return n == null ? "" : '<span class="chip f' + n + '">' + FN(n) + "</span>"; }
 const ST = { queued: "Queued", released: "Released", inplay: "In play", closing: "Close requested", closed: "Closed", skipped: "Skipped" };
 function stChip(s) { return '<span class="chip st-' + s + '">' + (ST[s] || s) + "</span>"; }
@@ -302,7 +303,7 @@ function setStatus(ok, note) { API.connected = ok; if (API.onStatus) API.onStatu
 /* ---- demo backend (dummy injects, this browser only) ---- */
 function demoBackend() {
   const KEY = "inj1-demo-db", bc = "BroadcastChannel" in window ? new BroadcastChannel("inj1-demo") : null;
-  function blank() { return { seq: 0, injects: DEMO_INJECTS.map((x) => Object.assign({ status: "queued", adhoc: false, priority: null, wall: false, involved: x.floors.slice() }, x)), events: [] }; }
+  function blank() { return { seq: 0, injects: DEMO_INJECTS.map((x) => Object.assign({ status: "queued", adhoc: false, priority: null, wall: false, involved: x.floors.slice(), travel: [] }, x)), events: [] }; }
   function read() { try { return JSON.parse(localStorage.getItem(KEY)) || blank(); } catch (e) { return blank(); } }
   function write(db) { localStorage.setItem(KEY, JSON.stringify(db)); if (bc) bc.postMessage("x"); }
   const merge = (a, b) => Array.from(new Set((a || []).concat(b || []).filter((x) => x != null))).sort((p, q) => p - q);
@@ -310,7 +311,7 @@ function demoBackend() {
   API.fetch = async () => { const db = read(); return { now: Date.now(), injects: db.injects.slice().sort((a, b) => (a.sim_min || 9999) - (b.sim_min || 9999) || a.ord - b.ord), events: db.events }; };
   API.act = async (role, action, id, floor, actor, d) => {
     d = d || {}; const db = read(); const now = new Date().toISOString();
-    const ctl = ["release", "unrelease", "skip", "unskip", "close", "reopen", "priority", "wall", "adhoc", "editnote", "note"];
+    const ctl = ["release", "unrelease", "skip", "unskip", "close", "reopen", "priority", "wall", "adhoc", "editnote", "note", "travel"];
     if (ctl.indexOf(action) >= 0 && role !== "control") throw new Error("Only SIM Control can do this");
     if (action === "adhoc") {
       id = "X" + (db.injects.filter((x) => x.adhoc).length + 1);
@@ -331,6 +332,7 @@ function demoBackend() {
     else if (action === "priority") { i.priority = d.p || null; }
     else if (action === "wall") { i.wall = !!d.on; }
     else if (action === "editnote") { i.note = d.note || ""; }
+    else if (action === "travel") { i.travel = Array.from(new Set((d.floors || []).map(Number).filter((n) => n))).sort((p, q) => p - q); }
     i.updated_at = now;
     db.seq++;
     db.events.push({ id: db.seq, inject_id: i.id, at: now, game: d.game || null, role, floor: floor == null ? null : floor, actor, kind: action, method: d.method || null, target: d.target || d.to || null, target_floor: d.targetFloor ? +d.targetFloor : null, body: d.body || d.note || d.p || d.title || null });
@@ -458,6 +460,7 @@ function evText(e) {
     case "moc": return "The MOC has been informed.";
     case "suggest": return "The floor asks to close it." + (b ? " Outcome: " + b : "");
     case "close": return "SIM Control closed it." + (b ? " " + b : "");
+    case "travel": return b ? "Expected to travel to " + b + "." : "No floor is expected any more.";
     case "reopen": return "SIM Control opened it again.";
     case "skip": return "SIM Control skipped it.";
     case "unskip": return "SIM Control put it back in the queue.";
@@ -480,6 +483,8 @@ function notify(fresh) {
     if (ME.view === "floor") {
       const mine = e.actor === ME.name && e.floor === ME.floor;
       if (e.kind === "release" && e.floor === ME.floor) { POP.push(i.id); }
+      else if (e.kind === "release" && (i.travel || []).indexOf(ME.floor) >= 0) { toast("Inject " + i.id + " started on " + FN(e.floor) + ". It is expected to come to your floor."); SND.play("soft"); }
+      else if (e.kind === "travel" && (i.travel || []).indexOf(ME.floor) >= 0 && ["released", "inplay", "closing"].indexOf(i.status) >= 0 && i.rel_floor !== ME.floor) { toast("Inject " + i.id + " is now expected to come to your floor."); SND.play("soft"); }
       else if (e.kind === "release" && (i.floors || []).indexOf(ME.floor) >= 0) { toast("Inject " + i.id + " went to " + FN(e.floor) + ". It may reach your desk."); SND.play("soft"); }
       else if (e.kind === "update" && e.target_floor === ME.floor && !mine) { toast((e.floor ? FN(e.floor) : "Another floor") + ": the player contacted " + (e.target || "your floor") + " about inject " + i.id + "."); SND.play("soft"); }
       else if (e.kind === "close" && (i.involved || []).indexOf(ME.floor) >= 0) { toast("SIM Control closed inject " + i.id + "."); SND.play("soft"); }
@@ -622,11 +627,13 @@ function detailModal(id) {
     "<tr><td>Times</td><td>Released " + (fmtT(i.released_at) || "-") + (i.rel_floor ? " to " + FN(i.rel_floor) : "") + " · Delivered " + (fmtT(i.delivered_at) || "-") + " · MOC informed " + (fmtT(i.moc_at) || "-") + " · Closed " + (fmtT(i.closed_at) || "-") + "</td></tr>" +
     (i.delivered_to ? "<tr><td>Delivered to</td><td>" + H(i.delivered_to) + " (" + H(i.delivered_how || "") + ") by " + H(i.delivered_by || "") + "</td></tr>" : "") +
     "<tr><td>Floors involved</td><td>" + ((i.involved || []).map(floorChip).join(" ") || "-") + "</td></tr>" +
+    "<tr><td>Expected to travel to</td><td>" + (travelChips(i) || "-") + "</td></tr>" +
     "</table>" +
     (btns ? '<div class="row" id="dBtns" style="margin-top:12px">' + btns + "</div>" : "") +
     (ctl ? '<details style="margin-top:12px"><summary>SIM Control tools</summary>' +
       '<div class="row" style="margin-top:6px"><span class="muted">Priority</span><button class="sm" data-p="A">A</button><button class="sm" data-p="B">B</button><button class="sm" data-p="">None</button>' +
       '<label style="margin-left:12px;display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="eWall"' + (i.wall ? " checked" : "") + "> Show on video wall (the wall view comes later)</label></div>" +
+      '<label class="f">Expected to travel to (those floors see it in their feed and get a soft alert at release)</label><div class="row" id="eTravel" style="flex-wrap:wrap;gap:6px">' + CFG.FLOORS.map((f) => '<label style="display:inline-flex;gap:5px;align-items:center;border:1px solid var(--rule);border-radius:999px;padding:3px 10px;font-size:12px"><input type="checkbox" value="' + f.n + '"' + ((i.travel || []).indexOf(f.n) >= 0 ? " checked" : "") + "> " + H(FN(f.n)) + "</label>").join("") + '</div><div class="row" style="margin-top:6px"><button class="sm" id="eTravelGo">Save travel floors</button></div>' +
       '<label class="f">Note on the inject card</label><textarea id="eNote">' + H(keepNote != null ? keepNote : i.note || "") + '</textarea><div class="row" style="margin-top:6px"><button class="sm" id="eNoteGo">Save note</button></div>' +
       '<label class="f">Add a SIM Control note to the log</label><textarea id="eLog" placeholder="For example: we gave the floor more time because the room is busy."></textarea><div class="row" style="margin-top:6px"><button class="sm" id="eLogGo">Add to log</button></div>' +
       "</details>" : "") +
@@ -647,6 +654,7 @@ function detailModal(id) {
   if (ctl) {
     $("modal").querySelectorAll("[data-p]").forEach((b) => (b.onclick = async () => { await act("priority", id, { p: b.dataset.p }); }));
     $("eWall").onchange = () => act("wall", id, { on: $("eWall").checked });
+    $("eTravelGo").onclick = async () => { const fl = [...$("eTravel").querySelectorAll("input:checked")].map((c) => +c.value); const r = await act("travel", id, { floors: fl, body: fl.map(FN).join(", ") }); if (r) toast(fl.length ? "Travel floors saved." : "Travel floors cleared."); };
     $("eNoteGo").onclick = async () => { const r = await act("editnote", id, { note: $("eNote").value.trim() }); if (r) toast("Note saved."); };
     $("eLogGo").onclick = async () => { const v = $("eLog").value.trim(); if (!v) return; const r = await act("note", id, { body: v }); if (r) { $("eLog").value = ""; toast("Added to the log."); } };
   }
@@ -727,7 +735,7 @@ function renderControl() {
       ? '<select class="sm" data-relfloor="' + H(x.id) + '">' + (fl.length ? fl : []).concat(CFG.FLOORS.map((f) => f.n).filter((n) => fl.indexOf(n) < 0)).map((n) => '<option value="' + n + '"' + (String(CTL["rf_" + x.id] || fl[0]) === String(n) ? " selected" : "") + ">" + H(FN(n)) + "</option>").join("") + "</select>"
       : "";
     return '<div class="qrow ' + cls + '"><div class="t">' + H(x.sim || "--") + (x.mel_real ? "<small>real " + H(x.mel_real) + "</small>" : "") + "</div>" +
-      '<div><div class="ti"><span class="id">' + H(x.id) + "</span> " + H(x.title) + '</div><div class="meta">' + fl.map(floorChip).join("") + prChip(x.priority) + badge +
+      '<div><div class="ti"><span class="id">' + H(x.id) + "</span> " + H(x.title) + '</div><div class="meta">' + fl.map(floorChip).join("") + travelChips(x) + prChip(x.priority) + badge +
       '<span class="muted">' + H(x.lead || "") + "</span>" + (x.note ? ' <span class="chip" title="' + H(x.note) + '" style="background:var(--amberL)">Note</span>' : "") + "</div></div>" +
       '<div class="act">' + pick + '<button class="pink sm" data-c="release" data-id="' + H(x.id) + '">Release</button>' +
       '<div class="row" style="gap:4px"><button class="sm ghost" data-c="prio" data-id="' + H(x.id) + '" title="Change priority">A/B</button><button class="sm ghost" data-c="detail" data-id="' + H(x.id) + '">Open</button></div></div></div>';
@@ -740,7 +748,7 @@ function renderControl() {
     const wait = x.status === "released" ? Math.round((now - new Date(x.released_at)) / 60000) : 0;
     const cls = x.status === "closing" ? "closing" : x.status === "released" ? "wait" + (wait >= CFG.WAIT_WARN ? " old" : "") : "";
     return '<div class="card ' + cls + '"><div class="top"><span class="id">' + H(x.id) + "</span>" + floorChip(x.rel_floor) + stChip(x.status) + prChip(x.priority) + '<span class="sp"></span><span class="muted">' + H(x.sim || "") + "</span></div>" +
-      '<div class="ti">' + H(x.title) + "</div>" +
+      '<div class="ti">' + H(x.title) + "</div>" + ((x.travel || []).length ? '<div style="margin-top:4px">' + travelChips(x) + "</div>" : "") +
       '<div class="times"><span>Released <b>' + fmtT(x.released_at) + "</b></span>" +
       (x.delivered_at ? "<span>Delivered <b>" + fmtT(x.delivered_at) + "</b></span>" : '<span class="no">Not delivered' + (wait ? " (" + wait + " min)" : "") + "</span>") +
       (x.moc_at ? "<span>MOC <b>" + fmtT(x.moc_at) + "</b></span>" : '<span class="no">MOC not informed</span>') +
@@ -831,7 +839,7 @@ function renderFloor() {
   const I = DB.injects, me = ME.floor;
   const todo = I.filter((x) => x.status === "released" && x.rel_floor === me);
   const play = I.filter((x) => ["inplay", "closing"].indexOf(x.status) >= 0 && x.rel_floor === me);
-  const watch = I.filter((x) => ["released", "inplay", "closing"].indexOf(x.status) >= 0 && x.rel_floor !== me && ((x.involved || []).indexOf(me) >= 0 || (x.floors || []).indexOf(me) >= 0));
+  const watch = I.filter((x) => ["released", "inplay", "closing"].indexOf(x.status) >= 0 && x.rel_floor !== me && ((x.involved || []).indexOf(me) >= 0 || (x.floors || []).indexOf(me) >= 0 || (x.travel || []).indexOf(me) >= 0));
   const closed = I.filter((x) => x.status === "closed" && (x.rel_floor === me || (x.involved || []).indexOf(me) >= 0));
   const card = (x, mode) => {
     const lu = lastUpdate(x.id);
@@ -842,6 +850,7 @@ function renderFloor() {
     btns += '<button class="ghost" data-f="detail" data-id="' + H(x.id) + '">Details</button>';
     return '<div class="fcard' + (mode === "todo" ? " todo" : "") + '"><div class="row"><span class="id" style="font-size:20px">' + H(x.id) + "</span>" + stChip(x.status) + (mode === "watch" ? floorChip(x.rel_floor) : "") + '<span class="sp"></span><span class="muted">Exercise ' + H(x.sim || "") + "</span></div>" +
       '<div class="ti">' + H(x.title) + '</div><div class="where">' + H(x.venue || "") + (x.zone ? " · " + H(x.zone) : "") + "</div>" +
+      (mode === "watch" && (x.travel || []).indexOf(ME.floor) >= 0 ? '<div class="note" style="background:#EEF0FA;border:1.5px dashed #7781B8">Expected to come to your floor. It started on ' + H(FN(x.rel_floor)) + ". Be ready when the players reach you.</div>" : "") +
       '<div class="kv">Lead: <b>' + H(x.lead || "") + "</b>" + (x.support ? " · Also: " + H(x.support) : "") + "</div>" +
       (x.note ? '<div class="note">' + H(x.note) + "</div>" : "") +
       (mode !== "todo" ? '<div class="kv">Delivered ' + (fmtT(x.delivered_at) || "-") + (x.delivered_to ? " to " + H(x.delivered_to) : "") + " · MOC informed " + (fmtT(x.moc_at) || "not yet") + " · " + countUpdates(x.id) + " updates</div>" : '<div class="kv">Released at ' + fmtT(x.released_at) + "</div>") +
@@ -853,7 +862,7 @@ function renderFloor() {
   $("fbody").innerHTML =
     sec("To deliver now", todo, "todo", "Nothing to deliver. Wait for SIM Control.") +
     sec("In play on your floor", play, "play", "No inject is in play on your floor.") +
-    sec("From other floors", watch, "watch", "Nothing from other floors at the moment.") +
+    sec("From other floors and expected here", watch, "watch", "Nothing from other floors at the moment.") +
     (closed.length ? '<div class="fsec"><details><summary>Closed (' + closed.length + ")</summary>" + closed.map((x) => '<div class="fcard"><div class="row"><span class="id">' + H(x.id) + "</span>" + stChip(x.status) + '<span class="sp"></span><button class="sm ghost" data-f="detail" data-id="' + H(x.id) + '">Details</button></div><div>' + H(x.title) + "</div></div>").join("") + "</details></div>" : "");
   renderSList();
 }
@@ -862,7 +871,7 @@ function renderSList() {
   const box = $("sList"); if (!box) return;
   const me = ME.floor, g = API.gameMin();
   ["sScope", "sShow"].forEach((id) => $(id).querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.v === (id === "sScope" ? FL.scope : FL.show))));
-  const mine = (x) => (x.floors || []).indexOf(me) >= 0 || x.rel_floor === me || (x.involved || []).indexOf(me) >= 0;
+  const mine = (x) => (x.floors || []).indexOf(me) >= 0 || x.rel_floor === me || (x.involved || []).indexOf(me) >= 0 || (x.travel || []).indexOf(me) >= 0;
   const list = DB.injects.filter((x) =>
     (FL.scope === "all" || mine(x)) &&
     (FL.show === "all" || SGROUP[x.status] === FL.show) &&
@@ -882,7 +891,7 @@ function renderSList() {
     h += '<div class="srow ' + (grp === "played" ? "done" : grp === "live" ? "live" : "") + '" data-f="' + (hide ? "" : "detail") + '" data-id="' + H(x.id) + '">' +
       '<span class="t">' + H(x.sim || "--") + '</span><span class="id">' + H(x.id) + "</span>" +
       '<div class="ti">' + (hide ? '<span class="masked">Upcoming inject</span>' : H(x.title) + "<small>" + H(x.lead || "") + (x.venue ? " · " + H(x.venue) : "") + "</small>") + "</div>" +
-      '<div class="r"><div class="row" style="gap:4px">' + (x.rel_floor ? floorChip(x.rel_floor) : (x.floors || []).map(floorChip).join("")) + stChip(x.status) + "</div>" + when + "</div></div>";
+      '<div class="r"><div class="row" style="gap:4px">' + (x.rel_floor ? floorChip(x.rel_floor) : (x.floors || []).map(floorChip).join("")) + ((x.travel || []).indexOf(me) >= 0 && x.rel_floor !== me ? '<span class="chip tv">Expected here</span>' : "") + stChip(x.status) + "</div>" + when + "</div></div>";
   });
   const keep = box.scrollTop;
   box.innerHTML = h || '<div class="empty" style="padding:14px">No inject matches these filters.</div>';
@@ -902,17 +911,17 @@ async function flClick(e) {
 function exportXlsx() {
   const I = DB.injects.slice().sort((a, b) => (a.sim_min == null ? 1e9 : a.sim_min) - (b.sim_min == null ? 1e9 : b.sim_min) || a.ord - b.ord);
   const firstEv = (id, k) => evsFor(id).find((e) => e.kind === k);
-  const head1 = ["ID", "Phase", "Exercise time (MEL)", "Real time (MEL)", "Title", "Lead department", "Supporting departments", "MEL floors", "Priority", "Status", "Released to floor", "Released at", "Exercise time at release", "Delivered at", "Exercise time at delivery", "Delivered by", "Delivered to", "How", "MOC informed at", "Close requested at", "Closed at", "Minutes release to delivery", "Minutes delivery to MOC informed", "Minutes delivery to close", "Number of updates", "Floors involved", "Note", "Last update"];
+  const head1 = ["ID", "Phase", "Exercise time (MEL)", "Real time (MEL)", "Title", "Lead department", "Supporting departments", "MEL floors", "Expected to travel to", "Priority", "Status", "Released to floor", "Released at", "Exercise time at release", "Delivered at", "Exercise time at delivery", "Delivered by", "Delivered to", "How", "MOC informed at", "Close requested at", "Closed at", "Minutes release to delivery", "Minutes delivery to MOC informed", "Minutes delivery to close", "Number of updates", "Floors involved", "Note", "Last update"];
   const rows1 = I.map((x) => {
     const r = firstEv(x.id, "release"), d = firstEv(x.id, "deliver"), lu = lastUpdate(x.id);
     const plain = (e) => (e ? fmtT(e.at) + " " + evText(e).replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'") : "");
-    return [x.id, x.phase, x.sim, x.mel_real, x.title, x.lead, x.support, FNs(x.floors), x.priority, ST[x.status], FN(x.rel_floor), fmtT(x.released_at, 1), r && r.game, fmtT(x.delivered_at, 1), d && d.game, x.delivered_by, x.delivered_to, x.delivered_how, fmtT(x.moc_at, 1), fmtT(x.closing_at, 1), fmtT(x.closed_at, 1),
+    return [x.id, x.phase, x.sim, x.mel_real, x.title, x.lead, x.support, FNs(x.floors), FNs(x.travel), x.priority, ST[x.status], FN(x.rel_floor), fmtT(x.released_at, 1), r && r.game, fmtT(x.delivered_at, 1), d && d.game, x.delivered_by, x.delivered_to, x.delivered_how, fmtT(x.moc_at, 1), fmtT(x.closing_at, 1), fmtT(x.closed_at, 1),
       minsBetween(x.released_at, x.delivered_at), minsBetween(x.delivered_at, x.moc_at), minsBetween(x.delivered_at, x.closed_at), countUpdates(x.id), FNs(x.involved), x.note, plain(lu)];
   });
   const head2 = ["Real time", "Exercise time", "Inject", "Title", "Action", "Floor", "By", "Method", "Contacted", "Contacted floor", "Text"];
-  const KN = { release: "Released", ack: "Card opened", deliver: "Delivered", update: "Update", moc: "MOC informed", suggest: "Close requested", close: "Closed", reopen: "Opened again", skip: "Skipped", unskip: "Back to queue", unrelease: "Recalled", priority: "Priority", wall: "Video wall flag", note: "SIM Control note", editnote: "Note changed", adhoc: "Ad hoc created" };
+  const KN = { release: "Released", ack: "Card opened", deliver: "Delivered", update: "Update", moc: "MOC informed", suggest: "Close requested", close: "Closed", reopen: "Opened again", skip: "Skipped", unskip: "Back to queue", unrelease: "Recalled", priority: "Priority", wall: "Video wall flag", note: "SIM Control note", editnote: "Note changed", adhoc: "Ad hoc created", travel: "Travel floors set" };
   const rows2 = DB.events.map((e) => [fmtT(e.at, 1), e.game, e.inject_id, (DB.by[e.inject_id] || {}).title, KN[e.kind] || e.kind, FN(e.floor), e.actor, e.method, e.target, FN(e.target_floor), e.body]);
-  const blob = XLSX([{ name: "Injects", head: head1, rows: rows1, widths: [7, 9, 10, 9, 48, 22, 30, 9, 8, 14, 9, 10, 10, 10, 10, 14, 26, 12, 10, 10, 10, 10, 10, 10, 9, 10, 30, 50] },
+  const blob = XLSX([{ name: "Injects", head: head1, rows: rows1, widths: [7, 9, 10, 9, 48, 22, 30, 9, 16, 8, 14, 9, 10, 10, 10, 10, 14, 26, 12, 10, 10, 10, 10, 10, 10, 9, 10, 30, 50] },
                      { name: "Log", head: head2, rows: rows2, widths: [10, 10, 8, 44, 16, 7, 14, 13, 24, 9, 60] }]);
   const a = document.createElement("a");
   const stamp = new Date(API.now()).toISOString().slice(0, 16).replace(/[-:T]/g, "");
