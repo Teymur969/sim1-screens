@@ -106,8 +106,8 @@ label{font-size:13px;color:var(--ink2);display:inline-flex;align-items:center;ga
 .mochd a{font-size:13px;font-weight:700;color:#fff;background:var(--ink);padding:8px 14px;border-radius:10px;text-decoration:none}
 .mocgrid{display:grid;grid-template-columns:minmax(360px,1fr) minmax(380px,1fr) minmax(460px,1.3fr);gap:16px;align-items:start}
 .mocly{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.mocly button,#mocwx button{text-align:left;font-weight:600}
-.mocly button.cur,#mocwx button.cur{background:var(--tealL);border-color:var(--teal)}
+.mocly button,#mocwx button,#mocrain button{text-align:left;font-weight:600}
+.mocly button.cur,#mocwx button.cur,#mocrain button.cur{background:var(--tealL);border-color:var(--teal)}
 .cslot{display:grid;grid-template-columns:52px 1fr;gap:6px 8px;align-items:center;padding:10px;border-radius:10px;background:var(--bg2);margin-bottom:8px}
 .cslot.spot{background:var(--amberL)}
 .cslot b{grid-row:span 2}
@@ -273,7 +273,12 @@ button.pause{background:var(--amber);border-color:var(--amber);color:#fff}
           <button data-wx="warn">Wind warning on now</button>
           <button data-wx="nowarn">No warning</button>
         </div>
-        <p class="muted" style="margin-top:8px">Figures come from the MOC Morning Briefing v0.5: 15 to 26 degrees, dry, gusts building to 50 km/h by 21:00.</p>
+        <div class="row" id="mocrain" style="margin-top:8px">
+          <button data-rain="auto">Shower as in the MEL (19:30 to 19:45)</button>
+          <button data-rain="on">Shower now</button>
+          <button data-rain="off">No shower</button>
+        </div>
+        <p class="muted" style="margin-top:8px">From the MOC Morning Briefing v0.5 (15 to 26 degrees, gusts building to 50 km/h by 21:00) and MEL v4: gusts loosen banners at 19:15 (34), light shower site-wide 19:30 to 19:45 (41.1). Send the EXCON weather alert message before 19:30 as the card says.</p>
       </div>
     </div>
 
@@ -778,6 +783,7 @@ window.MOC_DATA = {
      From the MOC Morning Briefing v0.5: 15 to 26 degrees, dry all day, no rain;
      gusts 15 (07:00), 18 (09:00), 22 (11:00), 28 (13:00), 35 (15:00), 40 (17:00), 45 (19:00), 50 (21:00);
      wind warning this evening, gusts 40 to 50 km/h from 17:00; ceremony weather decisions 07:45 and 12:45; sunset about 20:25.
+     MEL v4 (Belgrade timings): 34 wind gusts loosen banners at 19:15 (intermittent gusts); 41.1 light shower 19:30 to 19:45.
      Hourly temperatures and mean wind speed are interpolated for the screen (exercise data). */
   WX: {
     place: "Expo site, Surčin",
@@ -788,7 +794,11 @@ window.MOC_DATA = {
     warnFrom: 17 * 60,
     warnText: "Wind warning: gusts 40 to 50 km/h",
     preText: "Wind warning this evening. Gusts 40 to 50 km/h from 17:00.",
-    notes: [ { from: 0, to: 765, text: "Ceremony weather decisions at 07:45 and 12:45." } ]
+    notes: [ { from: 0, to: 765, text: "Ceremony weather decisions at 07:45 and 12:45." } ],
+    /* MEL 41.1: light shower site-wide 19:30 to 19:45 (8 real minutes), All Stars Court match delayed (41.2) */
+    showers: [ { from: 1170, to: 1185 } ],
+    showerSoon: "Shower expected 19:30",
+    showerNow: "Light shower now"
   },
 
   /* ---------------- Social feed ----------------
@@ -803,7 +813,7 @@ window.MOC_DATA = {
     { id: "a05", t: 510, net: "ig", h: "@the.hungry.nomad", n: "The Hungry Nomad", tx: "Breakfast ranking at #Expo2027: 1) the burek 2) the burek again 3) a coffee I couldn't pronounce but would marry." },
     { id: "a06", t: 530, net: "x",  h: "@marko_bg", n: "Marko", tx: "Danas su čak dva Nacionalna dana na Expu. Idemo! #Expo2027Beograd" },
     { id: "a07", t: 550, net: "tt", h: "@teacher.milica", n: "Ms Milica", tx: "Teacher check before the school trip: 46 kids, 46 hats, 46 packed lunches. Wish me luck. #Expo2027 #SchoolTrip" },
-    { id: "a08", t: 572, net: "ig", h: "@expo_superfan_27", n: "Expo superfan", tx: "Gates open! Speed-walking to the Thematic Pavilion like it's an Olympic event (it should be). #Expo2027Belgrade" },
+    { id: "a08", t: 572, net: "ig", h: "@expo_superfan_27", n: "Expo superfan", tx: "Gates open! Now speed-walking to be first in line when the pavilions open at 10. Olympic event, honestly. #Expo2027Belgrade" },
     { id: "a09", t: 588, net: "x",  h: "@weather_nerd_bg", n: "Weather nerd", tx: "Already a decent breeze over the Expo. If you brought a hat, hold on to it. If you brought a kite, respect. #Expo2027" },
     { id: "a10", t: 605, net: "ig", h: "@nina.makes", n: "Nina", tx: "Found the best view of the National Day Stage and I'm not telling anyone where it is. (It's here.) #Expo2027", img: "media/p03.jpg" },
     { id: "a11", t: 625, net: "tt", h: "@grandpa.goran", n: "Goran's grandson", tx: "My grandad (78) just beat a teenager at the sports court challenge. He will not stop talking about it. #Expo2027 #PlayForHumanity", img: "media/p04.jpg" },
@@ -812,13 +822,13 @@ window.MOC_DATA = {
     { id: "a14", t: 670, net: "x",  h: "@volunteer_vesna", n: "Vesna", tx: "Volunteer life: 14,000 steps by 11:00, three languages, one lost-sunglasses reunion. Best job going. #Expo2027Volunteers" },
     { id: "a15", t: 685, net: "tt", h: "@beatbox.boris", n: "Boris", tx: "Jammed with a pavilion's drum group for three minutes. My music career has peaked. #Expo2027Belgrade", img: "media/p09.jpg" },
     { id: "a16", t: 902, net: "ig", h: "@golden.hour.sara", n: "Sara", tx: "The afternoon at the Expo hits different. Everyone is slightly sunburnt and very happy. #Expo2027", img: "media/p05.jpg" },
-    { id: "a17", t: 910, net: "x",  h: "@stats_stefan", n: "Stefan", tx: "Day 13 personal Expo stats: 9 pavilions, 4 coffees, 1 selfie with the mascot, 0 regrets. #Expo2027" },
+    { id: "a17", t: 910, net: "x",  h: "@stats_stefan", n: "Stefan", tx: "All Stars Court match 2 is unreal. The crowd noise from the stands is something else. #Expo2027 #PlayForHumanity" },
     { id: "a18", t: 918, net: "tt", h: "@teo.tries.food", n: "Teo tries food", tx: "Eating one dish from every pavilion food stall. Day 13. Send help (and napkins). #Expo2027Belgrade" },
     { id: "a19", t: 1112, net: "ig", h: "@city.lights.bg", n: "City Lights BG", tx: "The lights are coming on across the Expo and it's honestly gorgeous. #Expo2027Belgrade", img: "media/p06.jpg" },
-    { id: "a20", t: 1128, net: "x",  h: "@headliner_hype", n: "Front row or nothing", tx: "Three hours until the Symphony Stage headliner and I've already lost my voice from practising. #Expo2027" },
+    { id: "a20", t: 1128, net: "x",  h: "@headliner_hype", n: "Front row or nothing", tx: "Two hours until the Symphony Stage headliner and I've already lost my voice from practising. #Expo2027" },
     { id: "a21", t: 1145, net: "tt", h: "@dance.crew.nbg", n: "Dance Crew NBG", tx: "Flash mob on the Promenade: 40 strangers, zero rehearsal. It worked?? #Expo2027Belgrade #PlayForHumanity", img: "media/p07.jpg" },
     { id: "a22", t: 1160, net: "ig", h: "@maja.and.max", n: "Maja & Max", tx: "Date night at the Expo. He said \"just one pavilion\". We're on pavilion number seven. #Expo2027" },
-    { id: "a23", t: 1175, net: "x",  h: "@tomislav_t", n: "Tomislav", tx: "Wind's picking up, hold on to your hats. Nobody here cares, the music's too good. #Expo2027" },
+    { id: "a23", t: 1150, net: "x",  h: "@tomislav_t", n: "Tomislav", tx: "Wind's picking up, hold on to your hats. Nobody here cares, the vibe is too good. #Expo2027" },
     { id: "a24", t: 1190, net: "ig", h: "@foodie.belgrade", n: "Foodie Belgrade", tx: "Ćevapi at sunset with a view of the pavilions. Ten out of ten, no notes. #Expo2027Beograd", img: "media/p08.jpg" },
     { id: "a25", t: 1205, net: "tt", h: "@kids.of.expo", n: "Kids of Expo", tx: "My 6-year-old spent ten minutes teaching a volunteer a dance move. The volunteer deserves a medal. #Expo2027" },
     { id: "a26", t: 1226, net: "x",  h: "@sunset_chaser", n: "Sunset chaser", tx: "Sunset over the Expo right on time. Half the Promenade clapped like it was a performance. #Expo2027Belgrade" },
@@ -829,55 +839,84 @@ window.MOC_DATA = {
   ],
 
   SCEN: [
-    { ref: "SIM1-TMO-02", t: 570, title: "School coaches queue back at Entrance C", posts: [
-      { id: "s01", net: "x", h: "@teacher_jasmina", n: "Jasmina", tx: "Our coach has been circling the car park for 20 minutes. 46 kids singing the same song on repeat. Send help. #Expo2027" } ] },
-    { ref: "SIM1-CAW-02", t: 580, title: "Toilet block floods at Entrance B", posts: [
-      { id: "s02", net: "x", h: "@mama_mila", n: "Mila", tx: "Toilet block near Entrance B is flooded and there are 30 kids doing the wee dance outside. Any other toilets close by?? #Expo2027" } ] },
-    { ref: "SIM1-SL-43", t: 600, title: "Queue at pedestrian screening, visitors complaining", posts: [
-      { id: "s03", net: "x", h: "@impatient_ivan", n: "Ivan", tx: "45 minutes at screening, in the sun. Love the Expo, hate this queue. @Expo2027 please sort it out." },
-      { id: "s04", net: "tt", h: "@queue.diaries", n: "Queue diaries", tx: "Day 1 of living in the security queue. I've made friends. We have a group chat now. #Expo2027", img: "media/s04.jpg" } ] },
-    { ref: "SIM1-SEC-01", t: 615, title: "Visitor refuses to give up a prohibited item at Zone A", posts: [
-      { id: "s05", net: "x", h: "@just_observing_ok", n: "Observer", tx: "Man at Zone A security arguing loudly about a knife in his bag. Staff stayed calm, fair play to them. #Expo2027" } ] },
-    { ref: "SIM1-SL-22", t: 635, title: "Ambush marketing: airline promo flyers", posts: [
-      { id: "s06", net: "ig", h: "@deal_hunter_bg", n: "Deal Hunter", tx: "People at the entrance handing out flyers with an airline promo code. Free flight discount at the Expo?? #Expo2027 #deal" } ] },
-    { ref: "SIM1-MER-01", t: 645, title: "Mascot plush sold out", posts: [
-      { id: "s07", net: "x", h: "@plush_collector", n: "Plush collector", tx: "Came all the way for the mascot plush. Sold out by 10:30. My daughter is devastated 😭 @Expo2027 when is the restock?" },
-      { id: "s08", net: "tt", h: "@mama.and.mia", n: "Mama & Mia", tx: "Empty shelf where the mascots should be. The face my child made. #Expo2027", img: "media/s03.jpg" } ] },
-    { ref: "SIM1-FM-02", t: 660, title: "Air conditioning fails in Hall 5", posts: [
-      { id: "s09", net: "x", h: "@hot_in_hall5", n: "Melting", tx: "Hall 5 is a sauna right now. Is the air con on? #Expo2027" } ] },
-    { ref: "SIM1-SL-41.1", t: 680, title: "Pupil separated from school group", posts: [
-      { id: "s10", net: "x", h: "@parent_petra", n: "Petra", tx: "Staff looking for a little boy near the Thematic Pavilion forecourt, security on their radios. Hope they find him quickly. #Expo2027" } ] },
-    { ref: "SIM1-SL-14", t: 685, title: "Fake or already scanned tickets", posts: [
-      { id: "s11", net: "x", h: "@sasha_s", n: "Sasha", tx: "Bought my ticket from a reseller and the gate says it's already been scanned. Is this a scam? @Expo2027 help" } ] },
-    { ref: "SIM1-DOV-09", t: 1110, title: "Wind puts temporary banners at risk", posts: [
-      { id: "s12", net: "tt", h: "@windy.vibes", n: "Windy vibes", tx: "The banners on the Promenade are doing their own dance in this wind 😬 #Expo2027", img: "media/s01.jpg" } ] },
-    { ref: "SIM1-SL-64", t: 1115, title: "Site approaching capacity", posts: [
-      { id: "s13", net: "ig", h: "@evening.eva", n: "Eva", tx: "It is PACKED tonight. Pretty sure everyone in Belgrade is here. #Expo2027" } ] },
-    { ref: "SIM1-TMO-03", t: 1125, title: "Rail delay, crowd at National Stadium station", posts: [
-      { id: "s14", net: "x", h: "@commuter_kris", n: "Kris", tx: "Train to the Expo stuck for 20+ minutes and the platform at National Stadium is rammed. Any updates? #Expo2027" } ] },
-    { ref: "SIM1-SEC-02", t: 1150, title: "Visitors push into the accredited lane at Zone B", posts: [
-      { id: "s15", net: "x", h: "@aleks_waits", n: "Aleks", tx: "30 minutes in the Zone B queue and people are just jumping into the accredited lane. Where are the staff? #Expo2027" } ] },
-    { ref: "SIM1-SL-34", t: 1170, title: "Power outage at Zone E food outlets", posts: [
-      { id: "s16", net: "ig", h: "@snack.attack", n: "Snack attack", tx: "Lights just went out at the food stalls in Zone E 😅 everyone's using phone torches. #Expo2027" } ] },
-    { ref: "SIM1-OIP-03", t: 1175, title: "Hall 7 reception guests held at Zone A screening", posts: [
-      { id: "s17", net: "x", h: "@guest_of_hall7", n: "Reception guest", tx: "40 of us on the guest list for a pavilion reception and we're stuck at Zone A screening. It started at 19:30. #Expo2027" } ] },
-    { ref: "SIM1-CAT-04", t: 1180, title: "Journalist reports an allergic reaction", posts: [
-      { id: "s18", net: "x", h: "@journo_jovana", n: "Jovana | reporter", tx: "Bad reaction after the Media Centre buffet tonight, lip swelling, medics are with me now. Please check your allergen labels @Expo2027" } ] },
-    { ref: "SIM1-MER-02", t: 1185, title: "Card terminals fail at the merchandise kiosk", posts: [
-      { id: "s19", net: "x", h: "@no_cash_nina", n: "Nina", tx: "Card machines down at the merch kiosk before the concert. Cash only?? Who carries cash in 2027 #Expo2027" } ] },
-    { ref: "SIM1-DOV-12", t: 1185, title: "Hoarding panels blown over on the Zone E approach", posts: [
-      { id: "s20", net: "x", h: "@careful_carla", n: "Carla", tx: "A hoarding panel just blew over on the way into Zone E. Nobody hurt, staff were on it fast. #Expo2027" } ] },
-    { ref: "SIM1-SL-55", t: 1215, title: "Smoke in the Thematic Pavilion", posts: [
-      { id: "s21", net: "tt", h: "@eyewitness.emir", n: "Emir", tx: "Fire alarm going off at the Thematic Pavilion and there's smoke, everyone's being walked out. #Expo2027", img: "media/s02.jpg" },
-      { id: "s22", net: "x", h: "@calm_kat", n: "Kat", tx: "Evacuated from the Thematic Pavilion. Staff were brilliant and calm. Waiting outside. #Expo2027" } ] },
-    { ref: "SIM1-SL-63", t: 1220, title: "Fight outside the Symphony Stage", posts: [
-      { id: "s23", net: "tt", h: "@night.cam", n: "Night cam", tx: "Scuffle outside the Symphony Stage, security moved in quickly. #Expo2027" } ] },
-    { ref: "SIM1-SL-47", t: 1250, title: "False rumour: the whole Expo is evacuating", trend: "#Expo2027Evacuation", posts: [
-      { id: "s24", net: "x", h: "@truth_teller_99", n: "TRUTH TELLER", tx: "BREAKING: the WHOLE Expo is being evacuated right now. Get out!!! #Expo2027 #Expo2027Evacuation", d: 0 },
-      { id: "s25", net: "tt", h: "@drama.daily", n: "Drama Daily", tx: "They're evacuating EVERYTHING at Expo 2027?? Share this #Expo2027Evacuation", d: 1 },
-      { id: "s26", net: "x", h: "@worried_mum_bg", n: "Worried mum", tx: "@Expo2027 is it true the whole site is being evacuated?? My kids are at the Symphony Stage", d: 2 },
-      { id: "s27", net: "x", h: "@bg_news_fan", n: "BG news fan", tx: "Seeing reports that Expo 2027 is evacuating. Any official word yet? #Expo2027 #Belgrade", d: 3 },
-      { id: "s28", net: "ig", h: "@inside.now", n: "Inside now", tx: "I'm literally at the Expo right now. Nobody is evacuating except one pavilion. Calm down, people. #Expo2027", d: 5 } ] }
+    { ref: "03", t: 572, title: "Closed F&B outlets in Zones E and B", posts: [
+      { id: "s01", net: "x", h: "@coffee_first_bg", n: "Coffee first", tx: "Gates are open but half the food stalls in Zone E are still shut. I need coffee before culture. #Expo2027" } ] },
+    { ref: "07", t: 580, title: "Radio microphones stop during the National Day sound check", posts: [
+      { id: "s02", net: "tt", h: "@stage.side.sofija", n: "Sofija", tx: "National Day Stage sound check: \"testing, testing\"... and then total silence 😅 #Expo2027" } ] },
+    { ref: "09", t: 582, title: "Power loss at the Expo terminus stops three bus lines", posts: [
+      { id: "s03", net: "x", h: "@bus_rider_bg", n: "Bus rider", tx: "Three bus lines not leaving the Expo terminus this morning. Anyone know what's going on? #Expo2027" } ] },
+    { ref: "10", t: 600, title: "Ceiling leak at the Serbian Pavilion before opening", posts: [
+      { id: "s04", net: "ig", h: "@first.in.line.bg", n: "First in line", tx: "Waiting at the Serbian Pavilion and saw staff running in with buckets. Hope it opens on time! #Expo2027Beograd" } ] },
+    { ref: "11", t: 585, title: "Toilet block floods as the first school groups arrive", posts: [
+      { id: "s05", net: "x", h: "@mama_mila", n: "Mila", tx: "Toilet block at the Entrance C arrival area is flooded and there are 30 kids doing the wee dance outside. Any other toilets close by?? #Expo2027" } ] },
+    { ref: "12", t: 590, title: "School coaches queue back at Entrance C", posts: [
+      { id: "s06", net: "x", h: "@teacher_jasmina", n: "Jasmina", tx: "Our coach has been queuing for the car park under Entrance C for 20 minutes. 46 kids singing the same song on repeat. Send help. #Expo2027" } ] },
+    { ref: "13", t: 595, title: "Sponsor branding installed with the wrong artwork", posts: [
+      { id: "s07", net: "ig", h: "@design.nerd.ana", n: "Ana designs", tx: "Is it just me or is that big banner on the Promenade showing the wrong artwork? 👀 #Expo2027" } ] },
+    { ref: "14", t: 600, title: "Queue at Entrance B pedestrian screening, visitors complaining", posts: [
+      { id: "s08", net: "x", h: "@impatient_ivan", n: "Ivan", tx: "45 minutes at screening at Entrance B, in the sun. Love the Expo, hate this queue. @Expo2027 please sort it out." },
+      { id: "s09", net: "tt", h: "@queue.diaries", n: "Queue diaries", tx: "Day 1 of living in the security queue. I've made friends. We have a group chat now. #Expo2027", img: "media/s04.jpg" } ] },
+    { ref: "17", t: 615, title: "Visitor refuses to give up a prohibited item at Gate C1", posts: [
+      { id: "s10", net: "x", h: "@just_observing_ok", n: "Observer", tx: "Man at Gate C1 security arguing loudly about something in his bag. Staff stayed calm, fair play to them. #Expo2027" } ] },
+    { ref: "18", t: 630, title: "Ambush marketing: airline promo flyers in Zone E", posts: [
+      { id: "s11", net: "ig", h: "@deal_hunter_bg", n: "Deal Hunter", tx: "People in Zone E handing out flyers with a flight promo code. Free flight discount at the Expo?? #Expo2027 #deal" } ] },
+    { ref: "19", t: 630, title: "Waste not collected at the Hall 7 pavilion entrance", posts: [
+      { id: "s12", net: "x", h: "@tidy_tamara", n: "Tamara", tx: "Bins overflowing right at the entrance to Hall 7. Not the welcome I expected. #Expo2027" } ] },
+    { ref: "20", t: 640, title: "Child hurt on a playground, volunteer unsure of first aid point", posts: [
+      { id: "s13", net: "x", h: "@dad_on_duty", n: "Dad on duty", tx: "My son scraped his knee at the play area and the volunteer didn't know where first aid was. Where is it? @Expo2027" } ] },
+    { ref: "21", t: 645, title: "WiFi outage in Hall 5", posts: [
+      { id: "s14", net: "tt", h: "@content.kosta", n: "Kosta", tx: "No WiFi in Hall 5. How am I supposed to post the best pavilion of the day?? #Expo2027" } ] },
+    { ref: "22", t: 645, title: "Mascot stock sold out at the Zone B merchandise point", posts: [
+      { id: "s15", net: "x", h: "@plush_collector", n: "Plush collector", tx: "Came all the way for the mascot plush. Sold out at the Zone B shop. My daughter is devastated 😭 @Expo2027 when is the restock?" },
+      { id: "s16", net: "tt", h: "@mama.and.mia", n: "Mama & Mia", tx: "Empty shelf where the mascots should be. The face my child made. #Expo2027", img: "media/s03.jpg" } ] },
+    { ref: "24", t: 660, title: "Air conditioning fails in Hall 5", posts: [
+      { id: "s17", net: "x", h: "@hot_in_hall5", n: "Melting", tx: "Hall 5 is a sauna right now. Is the air con on? #Expo2027" } ] },
+    { ref: "26", t: 680, title: "Pupil separated from school group, Play for Progress Pavilion", posts: [
+      { id: "s18", net: "x", h: "@parent_petra", n: "Petra", tx: "Staff looking for a little boy inside the Play for Progress Pavilion, security on their radios. Hope they find him quickly. #Expo2027" } ] },
+    { ref: "27", t: 685, title: "National Day Stage handrail fails, workforce injury", posts: [
+      { id: "s19", net: "x", h: "@ceremony_watcher", n: "Ceremony watcher", tx: "Paramedics at the side of the National Day Stage, looks like a worker got hurt. Hope they're OK. #Expo2027" } ] },
+    { ref: "28", t: 685, title: "Fake or already scanned tickets at Entrance C", posts: [
+      { id: "s20", net: "x", h: "@sasha_s", n: "Sasha", tx: "Bought my ticket from a reseller and the Entrance C gate says it's already been scanned. Is this a scam? @Expo2027 help" } ] },
+    { ref: "30.1", t: 1120, title: "VVIP visit brought forward, changed arrival point", posts: [
+      { id: "s21", net: "x", h: "@stuck_in_traffic", n: "Stuck in traffic", tx: "Police holding all traffic on the Expo access road. Motorcade coming? #Expo2027" } ] },
+    { ref: "34", t: 1155, title: "Wind gusts loosen flags and banners on the Promenade", posts: [
+      { id: "s22", net: "tt", h: "@windy.vibes", n: "Windy vibes", tx: "The banners on the Promenade are doing their own dance in this wind 😬 #Expo2027", img: "media/s01.jpg" },
+      { id: "s23", net: "x", h: "@careful_carla", n: "Carla", tx: "A banner on the Promenade has come loose and is hanging across the path. Staff are on their way. #Expo2027" } ] },
+    { ref: "37", t: 1170, title: "IP pavilions reaching capacity, Halls 1 to 4", posts: [
+      { id: "s24", net: "ig", h: "@evening.eva", n: "Eva", tx: "Halls 1 to 4 are PACKED tonight. 40 minute wait for every pavilion. #Expo2027" } ] },
+    { ref: "38.1", t: 1170, title: "Power outage at the F&B outlets by the All Stars Court", posts: [
+      { id: "s25", net: "ig", h: "@snack.attack", n: "Snack attack", tx: "Lights just went out at the food stalls by the All Stars Court 😅 everyone's using phone torches. #Expo2027" } ] },
+    { ref: "41", t: 1170, title: "Rain shower, match delayed at the All Stars Court", posts: [
+      { id: "s26", net: "tt", h: "@courtside.marko", n: "Courtside Marko", tx: "Rain stopped play at the All Stars Court! Officials have the mops out 🌧️ #Expo2027", img: "media/s05.jpg" },
+      { id: "s27", net: "x", h: "@soggy_but_happy", n: "Soggy but happy", tx: "Got absolutely caught in that shower. Still smiling. Is the match back on? #Expo2027" } ] },
+    { ref: "40", t: 1170, title: "Litter and a spill on the main route", posts: [
+      { id: "s28", net: "x", h: "@slippery_steps", n: "Careful walker", tx: "Huge spill on the main route by the food area, very slippery, someone nearly went flying. #Expo2027" } ] },
+    { ref: "42", t: 1180, title: "Rail delay, crowd at National Stadium station", posts: [
+      { id: "s29", net: "x", h: "@commuter_kris", n: "Kris", tx: "Train to the Expo stuck for 20+ minutes and the platform at National Stadium is rammed. Any updates? #Expo2027" } ] },
+    { ref: "43", t: 1180, title: "Journalist reports an allergic reaction at the Media Centre", posts: [
+      { id: "s30", net: "x", h: "@journo_jovana", n: "Jovana | reporter", tx: "Bad reaction after the Media Centre buffet tonight, lip swelling, medics are with me now. Please check your allergen labels @Expo2027" } ] },
+    { ref: "45", t: 1185, title: "Card terminals fail at the merchandise kiosk", posts: [
+      { id: "s31", net: "x", h: "@no_cash_nina", n: "Nina", tx: "Card machines down at the merch kiosk before the concert. Cash only?? Who carries cash in 2027 #Expo2027" } ] },
+    { ref: "47.1", t: 1200, title: "Lost child, queue outside Play for Progress Pavilion", posts: [
+      { id: "s32", net: "x", h: "@helpful_helena", n: "Helena", tx: "A little girl is crying on her own in the queue outside the Play for Progress Pavilion. We've told a steward. #Expo2027" } ] },
+    { ref: "50", t: 1210, title: "Site approaching capacity", posts: [
+      { id: "s33", net: "ig", h: "@crowd.watcher", n: "Crowd watcher", tx: "Pretty sure everyone in Belgrade is at the Expo tonight. Busiest I've ever seen it. #Expo2027" } ] },
+    { ref: "52", t: 1215, title: "Smoke in the Play for Progress Pavilion", posts: [
+      { id: "s34", net: "tt", h: "@eyewitness.emir", n: "Emir", tx: "Fire alarm going off at the Play for Progress Pavilion and there's smoke, everyone's being walked out. #Expo2027", img: "media/s02.jpg" },
+      { id: "s35", net: "x", h: "@calm_kat", n: "Kat", tx: "Evacuated from the Play for Progress Pavilion. Staff were brilliant and calm. Waiting outside. #Expo2027" } ] },
+    { ref: "52+", t: 1225, title: "OPTIONAL, not in the MEL: false rumour the whole Expo is evacuating", trend: "#Expo2027Evacuation", posts: [
+      { id: "s36", net: "x", h: "@truth_teller_99", n: "TRUTH TELLER", tx: "BREAKING: the WHOLE Expo is being evacuated right now. Get out!!! #Expo2027 #Expo2027Evacuation", d: 0 },
+      { id: "s37", net: "tt", h: "@drama.daily", n: "Drama Daily", tx: "They're evacuating EVERYTHING at Expo 2027?? Share this #Expo2027Evacuation", d: 1 },
+      { id: "s38", net: "x", h: "@worried_mum_bg", n: "Worried mum", tx: "@Expo2027 is it true the whole site is being evacuated?? My kids are at the Symphony Stage", d: 2 },
+      { id: "s39", net: "ig", h: "@inside.now", n: "Inside now", tx: "I'm literally at the Expo right now. Nobody is evacuating except one pavilion. Calm down, people. #Expo2027", d: 5 } ] },
+    { ref: "53", t: 1220, title: "Fight outside the Symphony Stage, media filming", posts: [
+      { id: "s40", net: "tt", h: "@night.cam", n: "Night cam", tx: "Scuffle outside the Symphony Stage, security moved in quickly. #Expo2027" } ] },
+    { ref: "38.2", t: 1230, title: "Second power outage at the All Stars Court F&B outlets", posts: [
+      { id: "s41", net: "x", h: "@hangry_hristina", n: "Hangry", tx: "Power gone AGAIN at the food stalls by the All Stars Court. 40 minute queue, no food, concert starts soon. How can you not keep the power on? @Expo2027" } ] },
+    { ref: "54", t: 1235, title: "Lighting trips on the approach to the Symphony Stage", posts: [
+      { id: "s42", net: "tt", h: "@torch.walk", n: "Torch walk", tx: "Lights out on the way to the Symphony Stage, it's pitch dark. Phone torches only 🔦 #Expo2027" } ] },
+    { ref: "55", t: 1240, title: "Sponsor hospitality seats double-booked", posts: [
+      { id: "s43", net: "x", h: "@vip_vesna", n: "Vesna", tx: "Arrived at our hospitality seats for the concert and someone is already sitting in them. Same seat numbers?! #Expo2027" } ] }
   ],
 
   /* Starting text for an official reply typed in SIM Control */
@@ -901,7 +940,8 @@ window.MOC_DATA = {
       custom: Array.isArray(m.custom) ? m.custom : [],   // [{id, net, h, n, tx, at}]
       auto: m.auto !== false,
       autoUntil: typeof m.autoUntil === "number" ? m.autoUntil : null,
-      wx: m.wx || "auto"                    // auto | warn | nowarn
+      wx: m.wx || "auto",                   // auto | warn | nowarn
+      rain: m.rain || "auto"                // auto | on | off
     };
   };
 
@@ -952,9 +992,15 @@ window.MOC_DATA = {
     const night = now >= sunset + 15 || now < 300;
     let warn = now >= W.warnFrom;
     if (m.wx === "warn") warn = true; else if (m.wx === "nowarn") warn = false;
-    const cond = night ? "Clear night, dry" : (gust >= 35 ? "Dry and windy" : (now < 660 ? "Sunny, dry" : "Sunny spells, dry"));
+    const sh = W.showers || [];
+    const rainAuto = sh.some(r => now >= r.from && now < r.to);
+    const rain = m.rain === "on" ? true : m.rain === "off" ? false : rainAuto;
+    const soon = !rain && m.rain !== "off" && sh.some(r => now >= r.from - 30 && now < r.from);
+    const after = !rain && m.rain !== "on" && sh.some(r => now >= r.to && now < r.to + 20);
+    const cond = rain ? "Light shower, windy" : after ? "Drying after a shower" : night ? "Clear night, dry" : (gust >= 35 ? "Dry and windy" : (now < 660 ? "Sunny, dry" : "Sunny spells, dry"));
+    const rainText = rain ? W.showerNow : soon ? W.showerSoon : after ? "Shower passed" : "No rain expected";
     const note = (W.notes.find(n => now >= n.from && now < n.to) || {}).text || "";
-    return { temp, gust, wind, warn, pre: !warn && now < W.warnFrom && m.wx !== "nowarn", cond, night, note };
+    return { temp: rain ? temp - 3 : temp, gust, wind, warn, pre: !warn && now < W.warnFrom && m.wx !== "nowarn", cond, night, note, rain, soon, rainText };
   };
 
   window.MOC = C;
@@ -977,6 +1023,7 @@ window.MOC_DATA = {
   /* layout */
   $("mocly").onclick = (e) => { const b = e.target.closest("[data-ly]"); if (b) mc(m => { m.layout = b.dataset.ly; }, "MOC screen layout: " + b.textContent); };
   /* weather */
+  $("mocrain").onclick = (e) => { const b = e.target.closest("[data-rain]"); if (b) mc(m => { m.rain = b.dataset.rain; }, "MOC weather: " + b.textContent); };
   $("mocwx").onclick = (e) => { const b = e.target.closest("[data-wx]"); if (b) mc(m => { m.wx = b.dataset.wx; }, "MOC weather: " + b.textContent); };
 
   /* CCTV */
@@ -1010,10 +1057,10 @@ window.MOC_DATA = {
   };
   function renderScen(m, now) {
     const pushed = new Map(m.pushed.map(x => [x.k, x.at]));
-    const html = MD.SCEN.map(g => {
+    const html = MD.SCEN.slice().sort((a, b) => a.t - b.t).map(g => {
       const done = g.posts.filter(p => pushed.has(p.id)).length;
       const st = done === g.posts.length ? '<span class="tg ok">Pushed ' + SIM.fmt(pushed.get(g.posts[0].id)) + '</span>' : (done ? '<span class="tg ok">' + done + ' of ' + g.posts.length + ' pushed</span>' : (now >= g.t ? '<span class="tg due">Due</span>' : '<span class="tg">' + SIM.fmt(g.t) + '</span>'));
-      return '<details class="sg' + (done === g.posts.length ? " done" : (now >= g.t ? " due" : "")) + '"><summary><span class="rf">' + esc(g.ref) + '</span><span class="tt">' + esc(g.title) + '</span>' + st +
+      return '<details class="sg' + (done === g.posts.length ? " done" : (now >= g.t ? " due" : "")) + '"><summary><span class="rf">Inject ' + esc(g.ref) + '</span><span class="tt">' + esc(g.title) + '</span>' + st +
         (done === g.posts.length ? '<button class="small" data-a="undo" data-ref="' + esc(g.ref) + '">Take back</button>' : '<button class="small ink" data-a="all" data-ref="' + esc(g.ref) + '">Push' + (g.posts.length > 1 ? " all " + g.posts.length : "") + '</button>') + '</summary>' +
         g.posts.map(p => '<div class="sp1"><span class="nt ' + p.net + '">' + ({ ig: "IG", tt: "TT", x: "X" }[p.net]) + '</span><span><b>' + esc(p.h) + '</b> ' + esc(p.tx) + (p.img ? ' <em>[image]</em>' : '') + '</span>' + (pushed.has(p.id) ? '<em>on feed</em>' : '<button class="small" data-a="one" data-ref="' + esc(g.ref) + '" data-id="' + p.id + '">Push</button>') + '</div>').join("") + '</details>';
     }).join("");
@@ -1047,8 +1094,9 @@ window.MOC_DATA = {
     const m = C.norm(X.S), now = gnow();
     document.querySelectorAll("#mocly button").forEach(b => b.classList.toggle("cur", b.dataset.ly === m.layout));
     document.querySelectorAll("#mocwx button").forEach(b => b.classList.toggle("cur", b.dataset.wx === m.wx));
+    document.querySelectorAll("#mocrain button").forEach(b => b.classList.toggle("cur", b.dataset.rain === m.rain));
     const w = C.wx(m, now);
-    $("wxnow").textContent = "Now: " + w.temp + "°, gusts " + w.gust + " km/h" + (w.warn ? ", warning ON" : "");
+    $("wxnow").textContent = "Now: " + w.temp + "°, gusts " + w.gust + " km/h" + (w.warn ? ", warning ON" : "") + (w.rain ? ", SHOWER" : "");
     document.querySelectorAll("#camslots .cslot").forEach((row, i) => {
       const c = m.cams[i], sel = row.querySelector("select"), inp = row.querySelector("input");
       if (document.activeElement !== sel && !row.dataset.dirty) sel.value = c.id;
