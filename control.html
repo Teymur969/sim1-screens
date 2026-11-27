@@ -623,7 +623,7 @@ window.SIM_DATA = {
   }
   function floorPicker(el, name){
     el.innerHTML = '<label class="on"><input type="checkbox" value="all" checked>All floors</label>' +
-      D.FLOORS.map(f => '<label><input type="checkbox" value="'+f.id+'">'+(f.id==="SC"?"Sim Control":"Floor "+f.id)+'</label>').join("");
+      D.FLOORS.map(f => '<label><input type="checkbox" value="'+f.id+'">'+(f.id==="SC"?"Sim Control":"Floor "+f.id)+'</label>').join("") + /*MOCPICK*/ '<label><input type="checkbox" value="MOC">MOC screen</label>';
     el.addEventListener("change", (e) => {
       const boxes = [...el.querySelectorAll("input")];
       if (e.target.value === "all" && e.target.checked) boxes.forEach(b => { if (b.value!=="all") b.checked=false; });
@@ -699,7 +699,12 @@ window.SIM_DATA = {
       const sc = (S.scene && S.scene.floors && S.scene.floors[f.id]) || (S.scene && S.scene.all) || "clock";
       const scl = (D.SCENES.find(x=>x.id===sc)||{label:sc}).label;
       return '<div class="fl'+(n?" on":"")+'"><i></i><b>'+(f.id==="SC"?"SC":f.id)+'</b><span>'+f.name+'<br><span class="sc">'+scl+'</span></span><em>'+(n? n+" online"+(snd<n?", "+(n-snd)+" without sound":"") : "offline")+'</em> <a href="'+base+'screen.html?floor='+encodeURIComponent(f.id)+extra+'" target="_blank">open</a></div>';
-    }).join("");
+    }).join("") + /*MOCROW*/ (function(){
+      const here = screens.filter(p => p.floor === "MOC"), n = here.length, snd = here.filter(p => p.sound).length;
+      const LY = { wall: "Full wall", cctv: "CCTV only", social: "Social and weather", logo: "Logo" };
+      const ly = LY[(S.moc && S.moc.layout) || "wall"] || "Full wall";
+      return '<div class="fl'+(n?" on":"")+'"><i></i><b>7</b><span>MOC screen (F7-03-L)<br><span class="sc">'+ly+'</span></span><em>'+(n? n+" online"+(snd<n?", "+(n-snd)+" without sound":"") : "offline")+'</em> <a href="'+base+'moc.html'+(extra?'?'+extra.replace(/^&/,''):'')+'" target="_blank">open</a></div>';
+    })();
   }
   SIM.onPresence(p => { presence = p; renderFloors(); });
 

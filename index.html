@@ -17,7 +17,6 @@ a.c small{color:#C9CEEA}
 <p>Open one floor link on each screen. The simulation team runs every screen from the control page.</p>
 <a class="c" href="hub.html">SIM Control hub <small>Inject tracker and screen control on one page, needs the passphrases</small></a>
 <a href="control.html">Screen control only <small>Simulation team only, needs the passphrase</small></a>
-<a href="moc.html">MOC screen <small>Large screen in the Floor 7 MOC room</small></a>
 <div id="list"></div>
 </div>
 <script>/* SIM1 floor screens: shared configuration and DUMMY DATA.
@@ -111,4 +110,8 @@ window.SIM_DATA = {
 </script>
 <script>
 document.getElementById("list").innerHTML = SIM_DATA.FLOORS.map(f => '<a href="screen.html?floor='+encodeURIComponent(f.id)+'">'+(f.id==="SC"?"Simulation Control":"Floor "+f.id+" | "+f.name)+' <small>'+(f.note||"")+'</small></a>').join("");
+/*MOCLIST*/ (function(){ const l = document.getElementById("list"), a = document.createElement("a");
+  a.href = "moc.html"; a.innerHTML = "Floor 7 | MOC screen <small>Large screen in the MOC room (F7-03-L): CCTV, IMP, DRS, weather, social</small>";
+  const f7 = [...l.querySelectorAll("a")].find(x => /floor=7$/.test(x.getAttribute("href")));
+  if (f7) f7.after(a); else l.appendChild(a); })();
 </script></body></html>
