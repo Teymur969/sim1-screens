@@ -129,6 +129,21 @@ details>summary{cursor:pointer;font-weight:700;font-size:12px;color:var(--mute);
 .fcard .btns button{flex:1;min-width:120px}
 .note{background:var(--amberL);border-radius:8px;padding:6px 9px;font-size:12px;margin-top:8px}
 
+/* scenario list (floor view) */
+.slist{max-height:65vh;overflow:auto;background:#fff;border:1px solid var(--rule);border-radius:14px;margin-top:8px}
+.srow{display:grid;grid-template-columns:52px 46px 1fr auto;gap:8px;align-items:center;padding:9px 12px;border-top:1px solid var(--rule);cursor:pointer}
+.srow:hover{background:var(--bg2)}
+.srow .t{font-variant-numeric:tabular-nums;font-weight:700}
+.srow .ti{font-size:13px}
+.srow .ti small{display:block;color:var(--mute);font-size:11px;margin-top:2px}
+.srow .r{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.srow.done{opacity:.55}
+.srow.live{background:#FFFBF2}
+.sph{position:sticky;top:0;background:var(--bg2);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);padding:6px 12px;border-top:1px solid var(--rule);z-index:1}
+.sbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sbar .opts button{padding:5px 10px}
+.masked{color:var(--mute2);font-style:italic}
+@media (max-width:600px){.srow{grid-template-columns:44px 40px 1fr}.srow .r{grid-column:2 / 4;flex-direction:row;justify-content:flex-start}}
 /* modal */
 .mask{position:fixed;inset:0;background:rgba(13,12,78,.45);display:none;align-items:flex-start;justify-content:center;z-index:100;overflow:auto;padding:28px 12px}
 .mask.on{display:flex}
@@ -780,16 +795,25 @@ function adhocModal() {
 }
 
 /* ---- Floor manager ---- */
-const FL = { built: false, q: "" };
+const FL = Object.assign({ built: false, q: "", scope: "mine", show: "all", mask: false }, (() => { try { return JSON.parse(localStorage.getItem("inj1-flist")) || {}; } catch (e) { return {}; } })(), { built: false, q: "" });
+function saveFL() { try { localStorage.setItem("inj1-flist", JSON.stringify({ scope: FL.scope, show: FL.show, mask: FL.mask })); } catch (e) {} }
 function renderFloor() {
   const f = CFG.FLOORS.find((x) => x.n === ME.floor) || { n: ME.floor, label: "" };
   if (!FL.built) {
     $("app").innerHTML = headerHtml("Floor " + f.n + " · " + f.label, H(ME.name) + " · Floor manager" + (DEMO ? " · Demo" : "")) +
       '<div class="fwrap"><div id="fbody"></div>' +
-      '<div class="fsec"><details id="fAll"><summary>All injects on every floor</summary><input type="search" id="fQ" placeholder="Search ID or title" style="margin:8px 0"><div id="fAllList"></div></details></div>' +
+      '<div class="fsec"><h2>Full scenario list <span class="n" id="sN">0</span></h2>' +
+      '<div class="sbar"><div class="opts" id="sScope"><button data-v="mine">Floor ' + f.n + '</button><button data-v="all">All floors</button></div>' +
+      '<div class="opts" id="sShow"><button data-v="all">All</button><button data-v="upcoming">Upcoming</button><button data-v="live">Live now</button><button data-v="played">Played</button></div></div>' +
+      '<div class="sbar" style="margin-top:8px"><input type="search" id="fQ" placeholder="Search ID, title or department" style="flex:1;min-width:180px">' +
+      '<label class="muted" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="sMask"> Hide titles of upcoming injects</label></div>' +
+      '<div class="slist" id="sList"></div></div>' +
       '<p class="muted" style="margin-top:24px">Keep this page open with sound on. A pop-up and a sound tell you when SIM Control releases an inject to your floor. <a href="#" id="fOut">Change floor or name</a></p></div>';
     $("app").addEventListener("click", flClick);
-    $("fQ").oninput = (e) => { FL.q = e.target.value.toLowerCase(); renderFloor(); };
+    $("fQ").oninput = (e) => { FL.q = e.target.value.toLowerCase(); renderSList(); };
+    const pill = (box, key) => { $(box).onclick = (e) => { const b = e.target.closest("button"); if (!b) return; FL[key] = b.dataset.v; saveFL(); renderSList(); }; };
+    pill("sScope", "scope"); pill("sShow", "show");
+    $("sMask").checked = !!FL.mask; $("sMask").onchange = (e) => { FL.mask = e.target.checked; saveFL(); renderSList(); };
     $("fOut").onclick = (e) => { e.preventDefault(); forget(); localStorage.removeItem(LS + ":last"); location.href = location.pathname + (DEMO ? "?demo=1" : ""); };
     FL.built = true; API.onStatus(API.connected, API.connected ? (DEMO ? "Demo mode" : "Live") : "Connecting"); drawClock();
   }
@@ -820,13 +844,41 @@ function renderFloor() {
     sec("In play on your floor", play, "play", "No inject is in play on your floor.") +
     sec("From other floors", watch, "watch", "Nothing from other floors at the moment.") +
     (closed.length ? '<div class="fsec"><details><summary>Closed (' + closed.length + ")</summary>" + closed.map((x) => '<div class="fcard"><div class="row"><span class="id">' + H(x.id) + "</span>" + stChip(x.status) + '<span class="sp"></span><button class="sm ghost" data-f="detail" data-id="' + H(x.id) + '">Details</button></div><div>' + H(x.title) + "</div></div>").join("") + "</details></div>" : "");
-  if ($("fAll").open) {
-    const all = I.filter((x) => x.status !== "queued" && (!FL.q || (x.id + " " + x.title).toLowerCase().indexOf(FL.q) >= 0));
-    $("fAllList").innerHTML = all.length ? all.map((x) => '<div class="row" style="padding:6px 0;border-top:1px solid var(--rule)"><span class="id">' + H(x.id) + "</span>" + stChip(x.status) + floorChip(x.rel_floor) + '<span style="flex:1;min-width:160px">' + H(x.title) + '</span><button class="sm ghost" data-f="detail" data-id="' + H(x.id) + '">Details</button></div>').join("") : '<div class="empty">No inject has been released yet.</div>';
-  }
+  renderSList();
+}
+const SGROUP = { queued: "upcoming", released: "live", inplay: "live", closing: "live", closed: "played", skipped: "played" };
+function renderSList() {
+  const box = $("sList"); if (!box) return;
+  const me = ME.floor, g = API.gameMin();
+  ["sScope", "sShow"].forEach((id) => $(id).querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.v === (id === "sScope" ? FL.scope : FL.show))));
+  const mine = (x) => (x.floors || []).indexOf(me) >= 0 || x.rel_floor === me || (x.involved || []).indexOf(me) >= 0;
+  const list = DB.injects.filter((x) =>
+    (FL.scope === "all" || mine(x)) &&
+    (FL.show === "all" || SGROUP[x.status] === FL.show) &&
+    (!FL.q || (x.id + " " + x.title + " " + (x.lead || "") + " " + (x.support || "")).toLowerCase().indexOf(FL.q) >= 0));
+  $("sN").textContent = list.length;
+  let ph = null, h = "";
+  list.forEach((x) => {
+    if (x.phase !== ph) { ph = x.phase; h += '<div class="sph">' + H(ph || "Other") + "</div>"; }
+    const grp = SGROUP[x.status];
+    let when = "";
+    if (x.status === "queued" && g != null && x.sim_min != null) {
+      const d = x.sim_min - g;
+      when = d <= -CFG.LATE_AFTER ? '<span class="badge late">Late</span>' : d <= CFG.DUE_BEFORE ? '<span class="badge due">Due now</span>' : d <= 90 ? '<span class="badge soon">In ' + Math.round(d) + " min</span>" : "";
+    } else if (grp === "live" && x.released_at) when = '<span class="muted">since ' + fmtT(x.released_at) + "</span>";
+    else if (x.status === "closed") when = '<span class="muted">closed ' + fmtT(x.closed_at) + "</span>";
+    const hide = FL.mask && x.status === "queued";
+    h += '<div class="srow ' + (grp === "played" ? "done" : grp === "live" ? "live" : "") + '" data-f="' + (hide ? "" : "detail") + '" data-id="' + H(x.id) + '">' +
+      '<span class="t">' + H(x.sim || "--") + '</span><span class="id">' + H(x.id) + "</span>" +
+      '<div class="ti">' + (hide ? '<span class="masked">Upcoming inject</span>' : H(x.title) + "<small>" + H(x.lead || "") + (x.venue ? " · " + H(x.venue) : "") + "</small>") + "</div>" +
+      '<div class="r"><div class="row" style="gap:4px">' + (x.rel_floor ? floorChip(x.rel_floor) : (x.floors || []).map(floorChip).join("")) + stChip(x.status) + "</div>" + when + "</div></div>";
+  });
+  const keep = box.scrollTop;
+  box.innerHTML = h || '<div class="empty" style="padding:14px">No inject matches these filters.</div>';
+  box.scrollTop = keep;
 }
 async function flClick(e) {
-  const b = e.target.closest("[data-f]"); if (!b) { if (e.target.closest("#fAll summary")) setTimeout(renderFloor, 0); return; }
+  const b = e.target.closest("[data-f]"); if (!b || !b.dataset.f) return;
   const c = b.dataset.f, id = b.dataset.id;
   if (c === "deliver") return deliverModal(id);
   if (c === "update") return updateModal(id);
