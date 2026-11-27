@@ -97,6 +97,50 @@ label{font-size:13px;color:var(--ink2);display:inline-flex;align-items:center;ga
 @media (max-width:1250px){main{grid-template-columns:1fr 1fr}.col3{grid-column:1/-1}}
 @media (max-width:820px){main{grid-template-columns:1fr}}
 </style>
+<!--MOC-START--><style>
+/* MOC screen section */
+.mocwrap{padding:0 22px 26px}
+.mochd{display:flex;align-items:center;gap:14px;padding:8px 2px 12px;border-top:2px solid var(--rule2)}
+.mochd h2{font-size:20px;padding-top:6px}
+.mochd .muted{padding-top:6px}
+.mochd a{font-size:13px;font-weight:700;color:#fff;background:var(--ink);padding:8px 14px;border-radius:10px;text-decoration:none}
+.mocgrid{display:grid;grid-template-columns:minmax(360px,1fr) minmax(380px,1fr) minmax(460px,1.3fr);gap:16px;align-items:start}
+.mocly{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mocly button,#mocwx button{text-align:left;font-weight:600}
+.mocly button.cur,#mocwx button.cur{background:var(--tealL);border-color:var(--teal)}
+.cslot{display:grid;grid-template-columns:52px 1fr;gap:6px 8px;align-items:center;padding:10px;border-radius:10px;background:var(--bg2);margin-bottom:8px}
+.cslot.spot{background:var(--amberL)}
+.cslot b{grid-row:span 2}
+.cslot select,.cslot input{width:100%;font-size:13px;padding:7px 9px}
+.cslot button{justify-self:start}
+.cslot button+button{grid-column:2}
+.cslot{grid-template-columns:52px 1fr auto auto}
+.cslot select{grid-column:2 / span 3}
+.cslot input{grid-column:2}
+.cslot button[data-a=show]{grid-column:3}
+.cslot button[data-a=spot]{grid-column:4}
+.scl{display:flex;flex-direction:column;gap:6px;max-height:560px;overflow:auto;padding-right:4px}
+.sg{border:1px solid var(--rule);border-radius:10px;background:#fff}
+.sg.due{border-color:var(--pink);box-shadow:0 0 0 2px rgba(238,77,155,.18)}
+.sg.done{background:var(--bg2);opacity:.75}
+.sg summary{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;list-style:none}
+.sg summary::-webkit-details-marker{display:none}
+.sg .rf{font-size:11px;font-weight:700;color:var(--mute);width:96px;flex:none}
+.sg .tt{flex:1;font-size:13px;font-weight:600}
+.tg{font-size:11px;font-weight:700;padding:3px 7px;border-radius:6px;background:#E6E9EF;color:var(--mute);flex:none}
+.tg.due{background:var(--pink);color:#fff}
+.tg.ok{background:var(--tealL);color:var(--teal)}
+.sp1{display:flex;gap:8px;align-items:flex-start;padding:7px 10px;border-top:1px solid var(--rule);font-size:12px;color:var(--ink2)}
+.sp1 span:nth-child(2){flex:1}
+.sp1 em{font-size:11px;color:var(--teal);font-style:normal;flex:none}
+.nt{font-size:10px;font-weight:700;color:#fff;border-radius:5px;padding:2px 5px;flex:none;background:#111}
+.nt.ig{background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)}
+.onf{display:flex;flex-direction:column;gap:5px;max-height:330px;overflow:auto}
+.onf div{display:flex;gap:8px;align-items:center;font-size:12px;padding:5px 8px;background:var(--bg2);border-radius:8px}
+.onf div span:nth-child(3){flex:1}
+.onf b{font-variant-numeric:tabular-nums}
+button.pause{background:var(--amber);border-color:var(--amber);color:#fff}
+</style><!--MOC-END-->
 </head>
 <body>
 <header>
@@ -204,6 +248,77 @@ label{font-size:13px;color:var(--ink2);display:inline-flex;align-items:center;ga
     </div>
   </div>
 </main>
+<!--MOC-START-->
+<section class="mocwrap" id="moc">
+  <div class="mochd"><h2>MOC screen</h2><span class="muted">Large screen in the Floor 7 MOC room (F7-03-L). Messages sent to All floors or Floor 7 also show here.</span><span class="sp"></span><span class="pill" id="mocon"><i></i><span id="mocontxt">MOC screen offline</span></span><a class="small" id="moclink" target="_blank">Open the MOC screen</a></div>
+  <div class="mocgrid">
+    <div class="col">
+      <div class="box">
+        <h2>Layout</h2>
+        <div class="mocly" id="mocly">
+          <button data-ly="wall">Full wall: CCTV, IMP, DRS, weather, social</button>
+          <button data-ly="cctv">CCTV only</button>
+          <button data-ly="social">Social media and weather only</button>
+          <button data-ly="logo">Logo only</button>
+        </div>
+      </div>
+      <div class="box">
+        <h2>Preview <span class="sp"></span><span class="muted">no sound</span></h2>
+        <div class="pv"><iframe id="mocpv" loading="lazy"></iframe></div>
+      </div>
+      <div class="box">
+        <h2>Weather <span class="sp"></span><span class="muted" id="wxnow"></span></h2>
+        <div class="row" id="mocwx">
+          <button data-wx="auto">Follow the briefing (warning from 17:00)</button>
+          <button data-wx="warn">Wind warning on now</button>
+          <button data-wx="nowarn">No warning</button>
+        </div>
+        <p class="muted" style="margin-top:8px">Figures come from the MOC Morning Briefing v0.5: 15 to 26 degrees, dry, gusts building to 50 km/h by 21:00.</p>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="box">
+        <h2>IMP incident log</h2>
+        <p class="muted">The IMP panel shows injects that SIM Control ticks <b>Show on the MOC screen</b> in the inject tracker (Open an inject &gt; SIM Control tools). They appear once released, newest first, with the latest floor update. Untick to take one off.</p>
+        <div class="row" style="margin-top:10px"><a class="small" id="injlink" target="_blank" style="font-size:13px;font-weight:700;color:#fff;background:var(--ink);padding:8px 14px;border-radius:10px;text-decoration:none">Open the inject tracker</a></div>
+      </div>
+      <div class="box">
+        <h2>CCTV (two tiles) <span class="sp"></span><button class="small" id="camreset">Back to the default cameras</button></h2>
+        <div id="camslots"></div>
+        <p class="muted" style="margin-top:8px">Pick a camera, or paste a link (YouTube, .mp4 or an image) to replace that tile's picture, then press Show. Leave the link empty to use the camera's own feed. Scenario views (X) are busier versions for when an inject lands.</p>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="box">
+        <h2>Social media feed <span class="sp"></span><span class="muted" id="socinfo"></span></h2>
+        <div class="row">
+          <button id="socauto">Pause the scheduled posts</button>
+          <span class="muted">The 30 scheduled posts appear on their own as the exercise clock passes their time.</span>
+        </div>
+        <div class="muted" style="margin:12px 0 6px">Scenario posts (from the MEL). Push them when the inject goes out:</div>
+        <div class="scl" id="scl"></div>
+      </div>
+      <div class="box">
+        <h2>Write a post</h2>
+        <div class="row">
+          <select id="cpnet"><option value="x">X</option><option value="ig">Instagram</option><option value="tt">TikTok</option></select>
+          <input type="text" id="cph" placeholder="@handle" style="width:150px">
+          <input type="text" id="cpn" placeholder="Display name" style="width:170px">
+          <button class="small" id="cpoff">Official Expo account</button>
+        </div>
+        <textarea id="cptx" placeholder="For example the official statement Digital and Communications posts during SL-47" style="margin-top:8px"></textarea>
+        <div class="row"><button class="ink" id="cpgo">Post to the MOC feed now</button></div>
+      </div>
+      <div class="box">
+        <h2>On the feed now <span class="sp"></span><button class="small" id="socunhide">Show hidden posts again</button></h2>
+        <div class="onf" id="onf"></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!--MOC-END-->
 
 <div id="pin"><div class="box"><h3>Enter the control passphrase</h3><p class="muted">Only people with the passphrase can change the screens. Anyone with a screen link can still watch.</p><input type="password" id="pinin" autocomplete="current-password"><div id="err"></div><button class="ink" id="pinok">Open control</button></div></div>
 <div class="toast" id="toast"></div>
@@ -520,6 +635,7 @@ window.SIM_DATA = {
   }
   function fname(ids){ return ids.indexOf("all")>=0 ? "all floors" : ids.map(i=>i==="SC"?"Sim Control":"floor "+i).join(", "); }
 
+  window.CTRL = { commit: commit, toast: toast, log: log, get S(){ return S; } };
   /* ---------- status ---------- */
   $("b-standby").onclick = () => commit(s => { s.clock = SIM.freezeClock(s); s.status = "standby"; }, "Status set to standby");
   $("b-live").onclick = () => commit(s => { s.clock = SIM.runClock(s); s.status = "live"; }, "Play started, on air");
@@ -624,5 +740,332 @@ window.SIM_DATA = {
   if (SIM.watchPresence) SIM.watchPresence(); else SIM.track({ role: "control" });
 })();
 </script>
+<!--MOC-START--><script>/* SIM1 MOC screen: content data. All of this is EXERCISE content for Thursday 27 May 2027.
+   Times (t) are game minutes after midnight. Edit here, then rebuild with build.py. */
+window.MOC_DATA = {
+
+  /* ---------------- CCTV ----------------
+     src: leave "" for the built-in simulated camera, or put a link:
+       - an .mp4 / .webm file (plays muted on loop), e.g. "media/cctv_entrance_b.mp4"
+       - a YouTube link (embedded muted on loop)
+       - an image (.jpg / .png / .gif)
+     sim: settings for the built-in simulated camera when src is empty.
+       density 0..1, mode "flow" | "queue" | "crowd" | "empty", smoke true/false */
+  CAMS: [
+    { id: "C01", name: "Entrance B, pedestrian screening", zone: "Zone B", src: "", sim: { density: .45, mode: "queue" } },
+    { id: "C02", name: "National Day Stage, front of house", zone: "Zone E", src: "", sim: { density: .35, mode: "crowd" } },
+    { id: "C03", name: "Promenade, looking west", zone: "Site-wide", src: "", sim: { density: .4, mode: "flow" } },
+    { id: "C04", name: "Entrance C car park, coach drop-off", zone: "Zone E", src: "", sim: { density: .2, mode: "flow" } },
+    { id: "C05", name: "Thematic Pavilion forecourt", zone: "Zone B", src: "", sim: { density: .4, mode: "flow" } },
+    { id: "C06", name: "Zone A screening lanes", zone: "Zone A", src: "", sim: { density: .35, mode: "queue" } },
+    { id: "C07", name: "Symphony Stage, front of stage", zone: "Zone E", src: "", sim: { density: .55, mode: "crowd" } },
+    { id: "C08", name: "Serbian Pavilion queue", zone: "Zone B", src: "", sim: { density: .5, mode: "queue" } },
+    /* Scenario views: busier versions for when an inject lands */
+    { id: "X01", name: "Entrance B screening, queue building", zone: "Zone B", src: "", sim: { density: .95, mode: "queue" }, ref: "SIM1-SL-43 / SL-61" },
+    { id: "X02", name: "Entrance C car park, coaches backing up", zone: "Zone E", src: "", sim: { density: .8, mode: "queue" }, ref: "SIM1-TMO-02" },
+    { id: "X03", name: "Zone B screening, accredited lane", zone: "Zone B", src: "", sim: { density: .95, mode: "crowd" }, ref: "SIM1-SEC-02" },
+    { id: "X04", name: "Thematic Pavilion, smoke at the exits", zone: "Zone B", src: "", sim: { density: .7, mode: "flow", smoke: true }, ref: "SIM1-SL-55" },
+    { id: "X05", name: "Symphony Stage, front of stage packed", zone: "Zone E", src: "", sim: { density: 1, mode: "crowd" }, ref: "SIM1-SL-63 / SL-32" }
+  ],
+  DEFAULT_CAMS: ["C01", "C03"],
+
+  /* ---------------- Weather ----------------
+     From the MOC Morning Briefing v0.5: 15 to 26 degrees, dry all day, no rain;
+     gusts 15 (07:00), 18 (09:00), 22 (11:00), 28 (13:00), 35 (15:00), 40 (17:00), 45 (19:00), 50 (21:00);
+     wind warning this evening, gusts 40 to 50 km/h from 17:00; ceremony weather decisions 07:45 and 12:45; sunset about 20:25.
+     Hourly temperatures and mean wind speed are interpolated for the screen (exercise data). */
+  WX: {
+    place: "Expo site, Surčin",
+    temps: { 6: 14, 7: 15, 8: 16, 9: 18, 10: 20, 11: 22, 12: 23, 13: 24, 14: 25, 15: 26, 16: 26, 17: 25, 18: 24, 19: 22, 20: 20, 21: 19, 22: 18, 23: 17, 24: 16 },
+    gusts: { 7: 15, 9: 18, 11: 22, 13: 28, 15: 35, 17: 40, 19: 45, 21: 50, 24: 50 },
+    windDir: "NW",
+    sunrise: "04:55", sunset: "20:25",
+    warnFrom: 17 * 60,
+    warnText: "Wind warning: gusts 40 to 50 km/h",
+    preText: "Wind warning this evening. Gusts 40 to 50 km/h from 17:00.",
+    notes: [ { from: 0, to: 765, text: "Ceremony weather decisions at 07:45 and 12:45." } ]
+  },
+
+  /* ---------------- Social feed ----------------
+     net: ig | tt | x. img: file in media/ (optional; a coloured card shows until the image is uploaded).
+     POSTS release on their own as the exercise clock passes t (the 30 DRS posts).
+     SCEN posts wait in SIM Control until someone pushes them, grouped by MEL scenario. */
+  POSTS: [
+    { id: "a01", t: 425, net: "x",  h: "@belgrade_early_bird", n: "Early Bird", tx: "Alarm at 05:30 for an Expo. My mum thinks I've joined a cult. It's a cult of sport and music, mum. #Expo2027Belgrade" },
+    { id: "a02", t: 440, net: "ig", h: "@lena.travels", n: "Lena | travels", tx: "Sunrise over Surčin with the planes landing right over the site. Day 13 and I'm still not over it ✈️ #Expo2027", img: "media/p01.jpg" },
+    { id: "a03", t: 460, net: "tt", h: "@dancing.dejan", n: "Dejan", tx: "POV: you're first at the gate and the volunteers are already doing the warm-up dance with you 😂 #Expo2027Belgrade #PlayForHumanity", img: "media/p02.jpg" },
+    { id: "a04", t: 485, net: "x",  h: "@ana_kafa", n: "Ana", tx: "Brought burek in my bag for the Expo. Security is going to have some questions. #Expo2027" },
+    { id: "a05", t: 510, net: "ig", h: "@the.hungry.nomad", n: "The Hungry Nomad", tx: "Breakfast ranking at #Expo2027: 1) the burek 2) the burek again 3) a coffee I couldn't pronounce but would marry." },
+    { id: "a06", t: 530, net: "x",  h: "@marko_bg", n: "Marko", tx: "Danas su čak dva Nacionalna dana na Expu. Idemo! #Expo2027Beograd" },
+    { id: "a07", t: 550, net: "tt", h: "@teacher.milica", n: "Ms Milica", tx: "Teacher check before the school trip: 46 kids, 46 hats, 46 packed lunches. Wish me luck. #Expo2027 #SchoolTrip" },
+    { id: "a08", t: 572, net: "ig", h: "@expo_superfan_27", n: "Expo superfan", tx: "Gates open! Speed-walking to the Thematic Pavilion like it's an Olympic event (it should be). #Expo2027Belgrade" },
+    { id: "a09", t: 588, net: "x",  h: "@weather_nerd_bg", n: "Weather nerd", tx: "Already a decent breeze over the Expo. If you brought a hat, hold on to it. If you brought a kite, respect. #Expo2027" },
+    { id: "a10", t: 605, net: "ig", h: "@nina.makes", n: "Nina", tx: "Found the best view of the National Day Stage and I'm not telling anyone where it is. (It's here.) #Expo2027", img: "media/p03.jpg" },
+    { id: "a11", t: 625, net: "tt", h: "@grandpa.goran", n: "Goran's grandson", tx: "My grandad (78) just beat a teenager at the sports court challenge. He will not stop talking about it. #Expo2027 #PlayForHumanity", img: "media/p04.jpg" },
+    { id: "a12", t: 640, net: "x",  h: "@luka_on_bike", n: "Luka", tx: "The Serbian Pavilion queue is long but the vibe in it is better than most parties I've been to. #Expo2027Beograd" },
+    { id: "a13", t: 655, net: "ig", h: "@smallsteps.family", n: "Small Steps", tx: "The kids' review of the Expo: \"better than the zoo, worse than ice cream\". Highest possible praise. #Expo2027" },
+    { id: "a14", t: 670, net: "x",  h: "@volunteer_vesna", n: "Vesna", tx: "Volunteer life: 14,000 steps by 11:00, three languages, one lost-sunglasses reunion. Best job going. #Expo2027Volunteers" },
+    { id: "a15", t: 685, net: "tt", h: "@beatbox.boris", n: "Boris", tx: "Jammed with a pavilion's drum group for three minutes. My music career has peaked. #Expo2027Belgrade", img: "media/p09.jpg" },
+    { id: "a16", t: 902, net: "ig", h: "@golden.hour.sara", n: "Sara", tx: "The afternoon at the Expo hits different. Everyone is slightly sunburnt and very happy. #Expo2027", img: "media/p05.jpg" },
+    { id: "a17", t: 910, net: "x",  h: "@stats_stefan", n: "Stefan", tx: "Day 13 personal Expo stats: 9 pavilions, 4 coffees, 1 selfie with the mascot, 0 regrets. #Expo2027" },
+    { id: "a18", t: 918, net: "tt", h: "@teo.tries.food", n: "Teo tries food", tx: "Eating one dish from every pavilion food stall. Day 13. Send help (and napkins). #Expo2027Belgrade" },
+    { id: "a19", t: 1112, net: "ig", h: "@city.lights.bg", n: "City Lights BG", tx: "The lights are coming on across the Expo and it's honestly gorgeous. #Expo2027Belgrade", img: "media/p06.jpg" },
+    { id: "a20", t: 1128, net: "x",  h: "@headliner_hype", n: "Front row or nothing", tx: "Three hours until the Symphony Stage headliner and I've already lost my voice from practising. #Expo2027" },
+    { id: "a21", t: 1145, net: "tt", h: "@dance.crew.nbg", n: "Dance Crew NBG", tx: "Flash mob on the Promenade: 40 strangers, zero rehearsal. It worked?? #Expo2027Belgrade #PlayForHumanity", img: "media/p07.jpg" },
+    { id: "a22", t: 1160, net: "ig", h: "@maja.and.max", n: "Maja & Max", tx: "Date night at the Expo. He said \"just one pavilion\". We're on pavilion number seven. #Expo2027" },
+    { id: "a23", t: 1175, net: "x",  h: "@tomislav_t", n: "Tomislav", tx: "Wind's picking up, hold on to your hats. Nobody here cares, the music's too good. #Expo2027" },
+    { id: "a24", t: 1190, net: "ig", h: "@foodie.belgrade", n: "Foodie Belgrade", tx: "Ćevapi at sunset with a view of the pavilions. Ten out of ten, no notes. #Expo2027Beograd", img: "media/p08.jpg" },
+    { id: "a25", t: 1205, net: "tt", h: "@kids.of.expo", n: "Kids of Expo", tx: "My 6-year-old spent ten minutes teaching a volunteer a dance move. The volunteer deserves a medal. #Expo2027" },
+    { id: "a26", t: 1226, net: "x",  h: "@sunset_chaser", n: "Sunset chaser", tx: "Sunset over the Expo right on time. Half the Promenade clapped like it was a performance. #Expo2027Belgrade" },
+    { id: "a27", t: 1240, net: "ig", h: "@front.row.jelena", n: "Jelena", tx: "Front row secured. Legs gone. Soul ready. #Expo2027 #SymphonyStage" },
+    { id: "a28", t: 1258, net: "tt", h: "@headliner_hype", n: "Front row or nothing", tx: "The countdown on the big screen has started and the whole crowd is counting with it 🎤 #Expo2027Belgrade" },
+    { id: "a29", t: 1275, net: "x",  h: "@night_owl_nikola", n: "Nikola", tx: "Leaving with a medal from a sports challenge I didn't know I'd entered. Great day. #Expo2027" },
+    { id: "a30", t: 1288, net: "ig", h: "@lena.travels", n: "Lena | travels", tx: "Day 13 done. Belgrade, you're showing off. #Expo2027Belgrade" }
+  ],
+
+  SCEN: [
+    { ref: "SIM1-TMO-02", t: 570, title: "School coaches queue back at Entrance C", posts: [
+      { id: "s01", net: "x", h: "@teacher_jasmina", n: "Jasmina", tx: "Our coach has been circling the car park for 20 minutes. 46 kids singing the same song on repeat. Send help. #Expo2027" } ] },
+    { ref: "SIM1-CAW-02", t: 580, title: "Toilet block floods at Entrance B", posts: [
+      { id: "s02", net: "x", h: "@mama_mila", n: "Mila", tx: "Toilet block near Entrance B is flooded and there are 30 kids doing the wee dance outside. Any other toilets close by?? #Expo2027" } ] },
+    { ref: "SIM1-SL-43", t: 600, title: "Queue at pedestrian screening, visitors complaining", posts: [
+      { id: "s03", net: "x", h: "@impatient_ivan", n: "Ivan", tx: "45 minutes at screening, in the sun. Love the Expo, hate this queue. @Expo2027 please sort it out." },
+      { id: "s04", net: "tt", h: "@queue.diaries", n: "Queue diaries", tx: "Day 1 of living in the security queue. I've made friends. We have a group chat now. #Expo2027", img: "media/s04.jpg" } ] },
+    { ref: "SIM1-SEC-01", t: 615, title: "Visitor refuses to give up a prohibited item at Zone A", posts: [
+      { id: "s05", net: "x", h: "@just_observing_ok", n: "Observer", tx: "Man at Zone A security arguing loudly about a knife in his bag. Staff stayed calm, fair play to them. #Expo2027" } ] },
+    { ref: "SIM1-SL-22", t: 635, title: "Ambush marketing: airline promo flyers", posts: [
+      { id: "s06", net: "ig", h: "@deal_hunter_bg", n: "Deal Hunter", tx: "People at the entrance handing out flyers with an airline promo code. Free flight discount at the Expo?? #Expo2027 #deal" } ] },
+    { ref: "SIM1-MER-01", t: 645, title: "Mascot plush sold out", posts: [
+      { id: "s07", net: "x", h: "@plush_collector", n: "Plush collector", tx: "Came all the way for the mascot plush. Sold out by 10:30. My daughter is devastated 😭 @Expo2027 when is the restock?" },
+      { id: "s08", net: "tt", h: "@mama.and.mia", n: "Mama & Mia", tx: "Empty shelf where the mascots should be. The face my child made. #Expo2027", img: "media/s03.jpg" } ] },
+    { ref: "SIM1-FM-02", t: 660, title: "Air conditioning fails in Hall 5", posts: [
+      { id: "s09", net: "x", h: "@hot_in_hall5", n: "Melting", tx: "Hall 5 is a sauna right now. Is the air con on? #Expo2027" } ] },
+    { ref: "SIM1-SL-41.1", t: 680, title: "Pupil separated from school group", posts: [
+      { id: "s10", net: "x", h: "@parent_petra", n: "Petra", tx: "Staff looking for a little boy near the Thematic Pavilion forecourt, security on their radios. Hope they find him quickly. #Expo2027" } ] },
+    { ref: "SIM1-SL-14", t: 685, title: "Fake or already scanned tickets", posts: [
+      { id: "s11", net: "x", h: "@sasha_s", n: "Sasha", tx: "Bought my ticket from a reseller and the gate says it's already been scanned. Is this a scam? @Expo2027 help" } ] },
+    { ref: "SIM1-DOV-09", t: 1110, title: "Wind puts temporary banners at risk", posts: [
+      { id: "s12", net: "tt", h: "@windy.vibes", n: "Windy vibes", tx: "The banners on the Promenade are doing their own dance in this wind 😬 #Expo2027", img: "media/s01.jpg" } ] },
+    { ref: "SIM1-SL-64", t: 1115, title: "Site approaching capacity", posts: [
+      { id: "s13", net: "ig", h: "@evening.eva", n: "Eva", tx: "It is PACKED tonight. Pretty sure everyone in Belgrade is here. #Expo2027" } ] },
+    { ref: "SIM1-TMO-03", t: 1125, title: "Rail delay, crowd at National Stadium station", posts: [
+      { id: "s14", net: "x", h: "@commuter_kris", n: "Kris", tx: "Train to the Expo stuck for 20+ minutes and the platform at National Stadium is rammed. Any updates? #Expo2027" } ] },
+    { ref: "SIM1-SEC-02", t: 1150, title: "Visitors push into the accredited lane at Zone B", posts: [
+      { id: "s15", net: "x", h: "@aleks_waits", n: "Aleks", tx: "30 minutes in the Zone B queue and people are just jumping into the accredited lane. Where are the staff? #Expo2027" } ] },
+    { ref: "SIM1-SL-34", t: 1170, title: "Power outage at Zone E food outlets", posts: [
+      { id: "s16", net: "ig", h: "@snack.attack", n: "Snack attack", tx: "Lights just went out at the food stalls in Zone E 😅 everyone's using phone torches. #Expo2027" } ] },
+    { ref: "SIM1-OIP-03", t: 1175, title: "Hall 7 reception guests held at Zone A screening", posts: [
+      { id: "s17", net: "x", h: "@guest_of_hall7", n: "Reception guest", tx: "40 of us on the guest list for a pavilion reception and we're stuck at Zone A screening. It started at 19:30. #Expo2027" } ] },
+    { ref: "SIM1-CAT-04", t: 1180, title: "Journalist reports an allergic reaction", posts: [
+      { id: "s18", net: "x", h: "@journo_jovana", n: "Jovana | reporter", tx: "Bad reaction after the Media Centre buffet tonight, lip swelling, medics are with me now. Please check your allergen labels @Expo2027" } ] },
+    { ref: "SIM1-MER-02", t: 1185, title: "Card terminals fail at the merchandise kiosk", posts: [
+      { id: "s19", net: "x", h: "@no_cash_nina", n: "Nina", tx: "Card machines down at the merch kiosk before the concert. Cash only?? Who carries cash in 2027 #Expo2027" } ] },
+    { ref: "SIM1-DOV-12", t: 1185, title: "Hoarding panels blown over on the Zone E approach", posts: [
+      { id: "s20", net: "x", h: "@careful_carla", n: "Carla", tx: "A hoarding panel just blew over on the way into Zone E. Nobody hurt, staff were on it fast. #Expo2027" } ] },
+    { ref: "SIM1-SL-55", t: 1215, title: "Smoke in the Thematic Pavilion", posts: [
+      { id: "s21", net: "tt", h: "@eyewitness.emir", n: "Emir", tx: "Fire alarm going off at the Thematic Pavilion and there's smoke, everyone's being walked out. #Expo2027", img: "media/s02.jpg" },
+      { id: "s22", net: "x", h: "@calm_kat", n: "Kat", tx: "Evacuated from the Thematic Pavilion. Staff were brilliant and calm. Waiting outside. #Expo2027" } ] },
+    { ref: "SIM1-SL-63", t: 1220, title: "Fight outside the Symphony Stage", posts: [
+      { id: "s23", net: "tt", h: "@night.cam", n: "Night cam", tx: "Scuffle outside the Symphony Stage, security moved in quickly. #Expo2027" } ] },
+    { ref: "SIM1-SL-47", t: 1250, title: "False rumour: the whole Expo is evacuating", trend: "#Expo2027Evacuation", posts: [
+      { id: "s24", net: "x", h: "@truth_teller_99", n: "TRUTH TELLER", tx: "BREAKING: the WHOLE Expo is being evacuated right now. Get out!!! #Expo2027 #Expo2027Evacuation", d: 0 },
+      { id: "s25", net: "tt", h: "@drama.daily", n: "Drama Daily", tx: "They're evacuating EVERYTHING at Expo 2027?? Share this #Expo2027Evacuation", d: 1 },
+      { id: "s26", net: "x", h: "@worried_mum_bg", n: "Worried mum", tx: "@Expo2027 is it true the whole site is being evacuated?? My kids are at the Symphony Stage", d: 2 },
+      { id: "s27", net: "x", h: "@bg_news_fan", n: "BG news fan", tx: "Seeing reports that Expo 2027 is evacuating. Any official word yet? #Expo2027 #Belgrade", d: 3 },
+      { id: "s28", net: "ig", h: "@inside.now", n: "Inside now", tx: "I'm literally at the Expo right now. Nobody is evacuating except one pavilion. Calm down, people. #Expo2027", d: 5 } ] }
+  ],
+
+  /* Starting text for an official reply typed in SIM Control */
+  OFFICIAL: { net: "x", h: "@Expo2027", n: "Expo 2027 Belgrade" }
+};
+</script><script>/* SIM1 MOC screen: shared logic for the MOC page and the control page.
+   MOC state lives in sim_state.state.moc (same row, same passphrase as the floor screens). */
+(function () {
+  const MD = window.MOC_DATA;
+  const C = {};
+
+  C.norm = function (s) {
+    const m = (s && s.moc) || {};
+    let cams = Array.isArray(m.cams) && m.cams.length >= 2 ? m.cams.slice(0, 2) : MD.DEFAULT_CAMS.map(id => ({ id: id, url: "" }));
+    return {
+      layout: m.layout || "wall",           // wall | cctv | social | logo
+      cams: cams.map(c => ({ id: (c && c.id) || "C01", url: (c && c.url) || "" })),
+      spot: typeof m.spot === "number" ? m.spot : -1,
+      pushed: Array.isArray(m.pushed) ? m.pushed : [],   // [{k: postId, at: gameMin}]
+      hide: Array.isArray(m.hide) ? m.hide : [],
+      custom: Array.isArray(m.custom) ? m.custom : [],   // [{id, net, h, n, tx, at}]
+      auto: m.auto !== false,
+      autoUntil: typeof m.autoUntil === "number" ? m.autoUntil : null,
+      wx: m.wx || "auto"                    // auto | warn | nowarn
+    };
+  };
+
+  C.cam = function (id) { return MD.CAMS.find(c => c.id === id) || MD.CAMS[0]; };
+
+  const scenPost = {}, scenOf = {};
+  MD.SCEN.forEach(g => g.posts.forEach(p => { scenPost[p.id] = p; scenOf[p.id] = g; }));
+  C.scenPost = (id) => scenPost[id];
+  C.scenGroup = (id) => scenOf[id];
+
+  C.hash = function (str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0); };
+
+  /* Everything visible in the feed at game minute `now`, newest first. */
+  C.feed = function (m, now) {
+    const out = [];
+    const limit = m.auto ? now : Math.min(now, m.autoUntil == null ? now : m.autoUntil);
+    MD.POSTS.forEach((p, i) => { if (p.t <= limit) out.push(Object.assign({ src: "drs", ord: i }, p)); });
+    m.pushed.forEach((x, i) => { const p = scenPost[x.k]; if (p && x.at <= now + 0.01) out.push(Object.assign({ src: "scen", ord: 1000 + i, ref: scenOf[x.k].ref, trend: scenOf[x.k].trend }, p, { t: x.at })); });
+    m.custom.forEach((p, i) => { if (p.at <= now + 0.01) out.push(Object.assign({ src: "custom", ord: 2000 + i }, p, { t: p.at })); });
+    const hid = new Set(m.hide);
+    return out.filter(p => !hid.has(p.id)).sort((a, b) => (b.t - a.t) || (b.ord - a.ord));
+  };
+
+  C.stats = function (p, now) {
+    const h = C.hash(p.id), age = Math.max(0, now - p.t), hot = p.trend ? 6 : 1;
+    const likes = 3 + (h % 60) + Math.floor(age * (1 + (h >>> 8) % 9) * hot);
+    const shares = Math.floor(likes / (4 + (h >>> 4) % 6));
+    const replies = Math.floor(likes / (7 + (h >>> 12) % 9));
+    return { likes, shares, replies };
+  };
+  C.k = (n) => n >= 10000 ? (n / 1000).toFixed(0) + "K" : n >= 1000 ? (n / 1000).toFixed(1) + "K" : String(n);
+
+  /* Weather at game minute `now` */
+  function interp(table, hour) {
+    const ks = Object.keys(table).map(Number).sort((a, b) => a - b);
+    if (hour <= ks[0]) return table[ks[0]];
+    for (let i = 1; i < ks.length; i++) if (hour <= ks[i]) {
+      const a = ks[i - 1], b = ks[i]; return table[a] + (table[b] - table[a]) * (hour - a) / (b - a);
+    }
+    return table[ks[ks.length - 1]];
+  }
+  C.wx = function (m, now) {
+    const W = MD.WX, hour = now / 60;
+    const gust = Math.round(interp(W.gusts, hour));
+    const temp = Math.round(interp(W.temps, hour));
+    const wind = Math.round(gust * 0.6);
+    const sunset = parseInt(W.sunset) * 60 + parseInt(W.sunset.slice(3));
+    const night = now >= sunset + 15 || now < 300;
+    let warn = now >= W.warnFrom;
+    if (m.wx === "warn") warn = true; else if (m.wx === "nowarn") warn = false;
+    const cond = night ? "Clear night, dry" : (gust >= 35 ? "Dry and windy" : (now < 660 ? "Sunny, dry" : "Sunny spells, dry"));
+    const note = (W.notes.find(n => now >= n.from && now < n.to) || {}).text || "";
+    return { temp, gust, wind, warn, pre: !warn && now < W.warnFrom && m.wx !== "nowarn", cond, night, note };
+  };
+
+  window.MOC = C;
+})();
+</script><script>(function () {
+  const MD = window.MOC_DATA, C = window.MOC, X = window.CTRL;
+  const $ = (id) => document.getElementById(id);
+  const esc = (t) => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const qs = new URLSearchParams(location.search);
+  const extra = SIM.mode === "demo" && qs.get("demo") === "1" ? "&demo=1" : "";
+  const base = location.href.replace(/control\.html.*$/, "");
+  $("moclink").href = base + "moc.html" + (extra ? "?" + extra.slice(1) : "");
+  $("mocpv").src = "moc.html?preview=1" + extra;
+  $("injlink").href = base + "injects.html?view=control" + extra;
+
+  /* every change goes through the floor control's commit, so it is logged and uses the same passphrase */
+  function mc(fn, label) { X.commit(s => { const m = C.norm(s); fn(m, s); s.moc = m; }, label); }
+  const gnow = () => SIM.gameMinutes(X.S);
+
+  /* layout */
+  $("mocly").onclick = (e) => { const b = e.target.closest("[data-ly]"); if (b) mc(m => { m.layout = b.dataset.ly; }, "MOC screen layout: " + b.textContent); };
+  /* weather */
+  $("mocwx").onclick = (e) => { const b = e.target.closest("[data-wx]"); if (b) mc(m => { m.wx = b.dataset.wx; }, "MOC weather: " + b.textContent); };
+
+  /* CCTV */
+  const opts = '<optgroup label="Cameras">' + MD.CAMS.filter(c => c.id[0] !== "X").map(c => '<option value="' + c.id + '">' + c.id + ' ' + esc(c.name) + '</option>').join("") + '</optgroup>' +
+    '<optgroup label="Scenario views">' + MD.CAMS.filter(c => c.id[0] === "X").map(c => '<option value="' + c.id + '">' + c.id + ' ' + esc(c.name) + (c.ref ? ' (' + c.ref + ')' : '') + '</option>').join("") + '</optgroup>';
+  $("camslots").innerHTML = [0, 1].map(i => '<div class="cslot" data-i="' + i + '"><b>Tile ' + (i + 1) + '</b><select>' + opts + '</select><input type="text" placeholder="Optional link"><button class="small ink" data-a="show">Show</button><button class="small" data-a="spot">Full CCTV area</button></div>').join("");
+  $("camslots").onclick = (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    const row = b.closest(".cslot"), i = +row.dataset.i;
+    if (b.dataset.a === "show") { const id = row.querySelector("select").value, url = row.querySelector("input").value.trim();
+      mc(m => { m.cams[i] = { id, url }; }, "MOC CCTV tile " + (i + 1) + ": " + id + (url ? " (link)" : "")); }
+    else mc(m => { m.spot = m.spot === i ? -1 : i; }, "MOC CCTV: " + (C.norm(X.S).spot === i ? "back to four tiles" : "tile " + (i + 1) + " fills the CCTV area"));
+  };
+  $("camreset").onclick = () => mc(m => { m.cams = MD.DEFAULT_CAMS.map(id => ({ id, url: "" })); m.spot = -1; }, "MOC CCTV back to the default cameras");
+
+  /* social: scheduled posts on/off */
+  $("socauto").onclick = () => { const m0 = C.norm(X.S);
+    mc(m => { if (m.auto) { m.auto = false; m.autoUntil = gnow(); } else { m.auto = true; m.autoUntil = null; } }, m0.auto ? "MOC scheduled posts paused" : "MOC scheduled posts resumed"); };
+
+  /* social: scenario posts */
+  function pushPosts(posts, label) {
+    const now = gnow();
+    mc(m => { posts.forEach(p => { if (!m.pushed.some(x => x.k === p.id)) m.pushed.push({ k: p.id, at: now + (p.d || 0) }); m.hide = m.hide.filter(h => h !== p.id); }); }, label);
+  }
+  $("scl").onclick = (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    const g = MD.SCEN.find(x => x.ref === b.dataset.ref); if (!g) return;
+    if (b.dataset.a === "all") pushPosts(g.posts, "MOC feed: pushed " + g.ref + " posts (" + g.posts.length + ")");
+    else if (b.dataset.a === "one") { const p = g.posts.find(x => x.id === b.dataset.id); pushPosts([p], "MOC feed: pushed " + g.ref + " post " + p.h); }
+    else if (b.dataset.a === "undo") { const ids = g.posts.map(p => p.id); mc(m => { m.pushed = m.pushed.filter(x => ids.indexOf(x.k) < 0); }, "MOC feed: took back " + g.ref + " posts"); }
+  };
+  function renderScen(m, now) {
+    const pushed = new Map(m.pushed.map(x => [x.k, x.at]));
+    const html = MD.SCEN.map(g => {
+      const done = g.posts.filter(p => pushed.has(p.id)).length;
+      const st = done === g.posts.length ? '<span class="tg ok">Pushed ' + SIM.fmt(pushed.get(g.posts[0].id)) + '</span>' : (done ? '<span class="tg ok">' + done + ' of ' + g.posts.length + ' pushed</span>' : (now >= g.t ? '<span class="tg due">Due</span>' : '<span class="tg">' + SIM.fmt(g.t) + '</span>'));
+      return '<details class="sg' + (done === g.posts.length ? " done" : (now >= g.t ? " due" : "")) + '"><summary><span class="rf">' + esc(g.ref) + '</span><span class="tt">' + esc(g.title) + '</span>' + st +
+        (done === g.posts.length ? '<button class="small" data-a="undo" data-ref="' + esc(g.ref) + '">Take back</button>' : '<button class="small ink" data-a="all" data-ref="' + esc(g.ref) + '">Push' + (g.posts.length > 1 ? " all " + g.posts.length : "") + '</button>') + '</summary>' +
+        g.posts.map(p => '<div class="sp1"><span class="nt ' + p.net + '">' + ({ ig: "IG", tt: "TT", x: "X" }[p.net]) + '</span><span><b>' + esc(p.h) + '</b> ' + esc(p.tx) + (p.img ? ' <em>[image]</em>' : '') + '</span>' + (pushed.has(p.id) ? '<em>on feed</em>' : '<button class="small" data-a="one" data-ref="' + esc(g.ref) + '" data-id="' + p.id + '">Push</button>') + '</div>').join("") + '</details>';
+    }).join("");
+    const open = [...$("scl").querySelectorAll("details[open] .rf")].map(e => e.textContent);
+    if (html !== renderScen.h) { renderScen.h = html; $("scl").innerHTML = html; $("scl").querySelectorAll("details").forEach(d => { if (open.indexOf(d.querySelector(".rf").textContent) >= 0) d.open = true; }); }
+  }
+
+  /* social: custom post */
+  $("cpoff").onclick = () => { $("cpnet").value = MD.OFFICIAL.net; $("cph").value = MD.OFFICIAL.h; $("cpn").value = MD.OFFICIAL.n; $("cptx").focus(); };
+  $("cpgo").onclick = () => {
+    const tx = $("cptx").value.trim(); if (!tx) return X.toast("Type the post first", true);
+    let h = $("cph").value.trim() || "@visitor"; if (h[0] !== "@") h = "@" + h;
+    const p = { id: "c" + Math.random().toString(36).slice(2, 8), net: $("cpnet").value, h, n: $("cpn").value.trim() || h.slice(1), tx, at: gnow() };
+    mc(m => { m.custom.push(p); }, "MOC feed: posted as " + h + ": " + tx);
+    $("cptx").value = "";
+  };
+
+  /* social: what is on the feed now */
+  $("onf").onclick = (e) => { const b = e.target.closest("[data-hide]"); if (b) mc(m => { if (m.hide.indexOf(b.dataset.hide) < 0) m.hide.push(b.dataset.hide); }, "MOC feed: hid a post"); };
+  $("socunhide").onclick = () => mc(m => { m.hide = []; }, "MOC feed: hidden posts shown again");
+  function renderOnFeed(m, now) {
+    const list = C.feed(m, now).slice(0, 12);
+    const html = list.length ? list.map(p => '<div><span class="nt ' + p.net + '">' + ({ ig: "IG", tt: "TT", x: "X" }[p.net]) + '</span><b>' + SIM.fmt(p.t) + '</b><span>' + esc(p.h) + ': ' + esc(p.tx.length > 90 ? p.tx.slice(0, 88) + "…" : p.tx) + '</span><button class="small" data-hide="' + esc(p.id) + '">Hide</button></div>').join("") : '<p class="muted">Nothing on the feed yet. Scheduled posts start at 07:05.</p>';
+    if (html !== renderOnFeed.h) { renderOnFeed.h = html; $("onf").innerHTML = html; }
+    const tot = C.feed(m, now).length;
+    $("socinfo").textContent = tot + " on the feed" + (m.hide.length ? ", " + m.hide.length + " hidden" : "");
+  }
+
+  /* render on every state change and every few seconds */
+  function render() {
+    const m = C.norm(X.S), now = gnow();
+    document.querySelectorAll("#mocly button").forEach(b => b.classList.toggle("cur", b.dataset.ly === m.layout));
+    document.querySelectorAll("#mocwx button").forEach(b => b.classList.toggle("cur", b.dataset.wx === m.wx));
+    const w = C.wx(m, now);
+    $("wxnow").textContent = "Now: " + w.temp + "°, gusts " + w.gust + " km/h" + (w.warn ? ", warning ON" : "");
+    document.querySelectorAll("#camslots .cslot").forEach((row, i) => {
+      const c = m.cams[i], sel = row.querySelector("select"), inp = row.querySelector("input");
+      if (document.activeElement !== sel && !row.dataset.dirty) sel.value = c.id;
+      if (document.activeElement !== inp && !row.dataset.dirty) inp.value = c.url || "";
+      row.classList.toggle("spot", m.spot === i);
+      row.querySelector('[data-a=spot]').textContent = m.spot === i ? "Back to four tiles" : "Full CCTV area";
+    });
+    $("socauto").textContent = m.auto ? "Pause the scheduled posts" : "Resume the scheduled posts";
+    $("socauto").classList.toggle("pause", !m.auto);
+    renderScen(m, now); renderOnFeed(m, now);
+  }
+  $("camslots").addEventListener("input", (e) => { const r = e.target.closest(".cslot"); if (r) r.dataset.dirty = "1"; });
+  $("camslots").addEventListener("click", (e) => { if (e.target.closest("button")) { const r = e.target.closest(".cslot"); if (r) delete r.dataset.dirty; } });
+  SIM.onState(() => setTimeout(render, 0));
+  setInterval(render, 3000);
+  SIM.onPresence(p => {
+    const n = p.filter(x => x.role === "screen" && x.floor === "MOC");
+    $("mocon").className = "pill " + (n.length ? "ok" : "bad");
+    $("mocontxt").textContent = n.length ? "MOC screen online" + (n.some(x => !x.sound) ? ", sound off" : "") : "MOC screen offline";
+  });
+  render();
+})();
+</script><!--MOC-END-->
 </body>
 </html>

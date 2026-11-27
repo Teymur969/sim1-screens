@@ -169,6 +169,7 @@ details>summary{cursor:pointer;font-weight:700;font-size:12px;color:var(--mute);
 .err{color:var(--red);font-size:13px;margin-top:10px;min-height:18px}
 @media (max-width:1100px){.cols{grid-template-columns:1fr}.scroll{max-height:none}}
 @media (max-width:600px){header{gap:10px;padding:8px 10px}header img{display:none}.hclock b{font-size:22px}.hide-s{display:none}}
+.chip.wl{background:#EE4D9B;color:#fff;border-color:#EE4D9B}
 </style>
 </head>
 <body>
@@ -466,7 +467,7 @@ function evText(e) {
     case "unskip": return "SIM Control put it back in the queue.";
     case "unrelease": return "SIM Control recalled it before delivery.";
     case "priority": return "Priority set to " + (b || "none") + ".";
-    case "wall": return "Video wall flag changed.";
+    case "wall": return "MOC screen flag changed.";
     case "note": return "SIM Control note: " + b;
     case "editnote": return "SIM Control changed the inject note.";
     case "adhoc": return "SIM Control created this ad hoc inject.";
@@ -632,7 +633,7 @@ function detailModal(id) {
     (btns ? '<div class="row" id="dBtns" style="margin-top:12px">' + btns + "</div>" : "") +
     (ctl ? '<details style="margin-top:12px"><summary>SIM Control tools</summary>' +
       '<div class="row" style="margin-top:6px"><span class="muted">Priority</span><button class="sm" data-p="A">A</button><button class="sm" data-p="B">B</button><button class="sm" data-p="">None</button>' +
-      '<label style="margin-left:12px;display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="eWall"' + (i.wall ? " checked" : "") + "> Show on video wall (the wall view comes later)</label></div>" +
+      '<label style="margin-left:12px;display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="eWall"' + (i.wall ? " checked" : "") + "> Show on the MOC screen (IMP panel)</label></div>" +
       '<label class="f">Expected to travel to (those floors see it in their feed and get a soft alert at release)</label><div class="row" id="eTravel" style="flex-wrap:wrap;gap:6px">' + CFG.FLOORS.map((f) => '<label style="display:inline-flex;gap:5px;align-items:center;border:1px solid var(--rule);border-radius:999px;padding:3px 10px;font-size:12px"><input type="checkbox" value="' + f.n + '"' + ((i.travel || []).indexOf(f.n) >= 0 ? " checked" : "") + "> " + H(FN(f.n)) + "</label>").join("") + '</div><div class="row" style="margin-top:6px"><button class="sm" id="eTravelGo">Save travel floors</button></div>' +
       '<label class="f">Note on the inject card</label><textarea id="eNote">' + H(keepNote != null ? keepNote : i.note || "") + '</textarea><div class="row" style="margin-top:6px"><button class="sm" id="eNoteGo">Save note</button></div>' +
       '<label class="f">Add a SIM Control note to the log</label><textarea id="eLog" placeholder="For example: we gave the floor more time because the room is busy."></textarea><div class="row" style="margin-top:6px"><button class="sm" id="eLogGo">Add to log</button></div>' +
@@ -735,7 +736,7 @@ function renderControl() {
       ? '<select class="sm" data-relfloor="' + H(x.id) + '">' + (fl.length ? fl : []).concat(CFG.FLOORS.map((f) => f.n).filter((n) => fl.indexOf(n) < 0)).map((n) => '<option value="' + n + '"' + (String(CTL["rf_" + x.id] || fl[0]) === String(n) ? " selected" : "") + ">" + H(FN(n)) + "</option>").join("") + "</select>"
       : "";
     return '<div class="qrow ' + cls + '"><div class="t">' + H(x.sim || "--") + (x.mel_real ? "<small>real " + H(x.mel_real) + "</small>" : "") + "</div>" +
-      '<div><div class="ti"><span class="id">' + H(x.id) + "</span> " + H(x.title) + '</div><div class="meta">' + fl.map(floorChip).join("") + travelChips(x) + prChip(x.priority) + badge +
+      '<div><div class="ti"><span class="id">' + H(x.id) + "</span> " + H(x.title) + '</div><div class="meta">' + fl.map(floorChip).join("") + travelChips(x) + prChip(x.priority) + (x.wall ? '<span class="chip wl">MOC screen</span>' : "") + badge +
       '<span class="muted">' + H(x.lead || "") + "</span>" + (x.note ? ' <span class="chip" title="' + H(x.note) + '" style="background:var(--amberL)">Note</span>' : "") + "</div></div>" +
       '<div class="act">' + pick + '<button class="pink sm" data-c="release" data-id="' + H(x.id) + '">Release</button>' +
       '<div class="row" style="gap:4px"><button class="sm ghost" data-c="prio" data-id="' + H(x.id) + '" title="Change priority">A/B</button><button class="sm ghost" data-c="detail" data-id="' + H(x.id) + '">Open</button></div></div></div>';
@@ -747,7 +748,7 @@ function renderControl() {
     const lu = lastUpdate(x.id), n = countUpdates(x.id);
     const wait = x.status === "released" ? Math.round((now - new Date(x.released_at)) / 60000) : 0;
     const cls = x.status === "closing" ? "closing" : x.status === "released" ? "wait" + (wait >= CFG.WAIT_WARN ? " old" : "") : "";
-    return '<div class="card ' + cls + '"><div class="top"><span class="id">' + H(x.id) + "</span>" + floorChip(x.rel_floor) + stChip(x.status) + prChip(x.priority) + '<span class="sp"></span><span class="muted">' + H(x.sim || "") + "</span></div>" +
+    return '<div class="card ' + cls + '"><div class="top"><span class="id">' + H(x.id) + "</span>" + floorChip(x.rel_floor) + stChip(x.status) + prChip(x.priority) + (x.wall ? '<span class="chip wl">MOC screen</span>' : "") + '<span class="sp"></span><span class="muted">' + H(x.sim || "") + "</span></div>" +
       '<div class="ti">' + H(x.title) + "</div>" + ((x.travel || []).length ? '<div style="margin-top:4px">' + travelChips(x) + "</div>" : "") +
       '<div class="times"><span>Released <b>' + fmtT(x.released_at) + "</b></span>" +
       (x.delivered_at ? "<span>Delivered <b>" + fmtT(x.delivered_at) + "</b></span>" : '<span class="no">Not delivered' + (wait ? " (" + wait + " min)" : "") + "</span>") +
@@ -919,7 +920,7 @@ function exportXlsx() {
       minsBetween(x.released_at, x.delivered_at), minsBetween(x.delivered_at, x.moc_at), minsBetween(x.delivered_at, x.closed_at), countUpdates(x.id), FNs(x.involved), x.note, plain(lu)];
   });
   const head2 = ["Real time", "Exercise time", "Inject", "Title", "Action", "Floor", "By", "Method", "Contacted", "Contacted floor", "Text"];
-  const KN = { release: "Released", ack: "Card opened", deliver: "Delivered", update: "Update", moc: "MOC informed", suggest: "Close requested", close: "Closed", reopen: "Opened again", skip: "Skipped", unskip: "Back to queue", unrelease: "Recalled", priority: "Priority", wall: "Video wall flag", note: "SIM Control note", editnote: "Note changed", adhoc: "Ad hoc created", travel: "Travel floors set" };
+  const KN = { release: "Released", ack: "Card opened", deliver: "Delivered", update: "Update", moc: "MOC informed", suggest: "Close requested", close: "Closed", reopen: "Opened again", skip: "Skipped", unskip: "Back to queue", unrelease: "Recalled", priority: "Priority", wall: "MOC screen flag", note: "SIM Control note", editnote: "Note changed", adhoc: "Ad hoc created", travel: "Travel floors set" };
   const rows2 = DB.events.map((e) => [fmtT(e.at, 1), e.game, e.inject_id, (DB.by[e.inject_id] || {}).title, KN[e.kind] || e.kind, FN(e.floor), e.actor, e.method, e.target, FN(e.target_floor), e.body]);
   const blob = XLSX([{ name: "Injects", head: head1, rows: rows1, widths: [7, 9, 10, 9, 48, 22, 30, 9, 16, 8, 14, 9, 10, 10, 10, 10, 14, 26, 12, 10, 10, 10, 10, 10, 10, 9, 10, 30, 50] },
                      { name: "Log", head: head2, rows: rows2, widths: [10, 10, 8, 44, 16, 7, 14, 13, 24, 9, 60] }]);
