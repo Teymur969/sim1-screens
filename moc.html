@@ -1144,6 +1144,7 @@ window.MOC_DATA = {
         IMP = ((db && db.injects) || []).filter(i => (i.wall || i.moc_at) && ["released", "inplay", "closing"].indexOf(i.status) >= 0 && !back[i.id]).map(i => ({
           id: i.id, title: i.title, zone: i.zone, venue: i.venue, sim: i.sim, status: i.status, lead: i.lead, support: i.support, rel_at: i.released_at,
           rel_floor: i.rel_floor, delivered_to: i.delivered_to, escalated: !!i.moc_at,
+          moc_kind: (function () { const l = ev.filter(e => e.inject_id === i.id && e.kind === "moc"); return l.length ? (l[l.length - 1].method === "Escalation" ? "esc" : "info") : null; })(),
           rel_game: (ev.find(e => e.inject_id === i.id && e.kind === "release") || {}).game,
           del_game: (ev.find(e => e.inject_id === i.id && e.kind === "deliver") || {}).game,
           moc_game: (ev.filter(e => e.inject_id === i.id && e.kind === "moc").pop() || {}).game,
@@ -1161,7 +1162,8 @@ window.MOC_DATA = {
     const ids = IMP.map(i => i.id);
     if (impSeen) ids.forEach(id => { if (impSeen.indexOf(id) < 0) { impNew[id] = Date.now(); play("pop"); } });
     impSeen = ids;
-    const list = IMP.slice().sort((a, b) => (ORD[a.status] - ORD[b.status]) || String(b.rel_at || "").localeCompare(String(a.rel_at || "")));
+    const KO = { esc: 0, info: 2 };
+    const list = IMP.slice().sort((a, b) => (ORD[a.status] - ORD[b.status]) || ((KO[a.moc_kind] ?? 1) - (KO[b.moc_kind] ?? 1)) || String(b.rel_at || "").localeCompare(String(a.rel_at || "")));
     const open = list.filter(i => i.status !== "closed").length;
     $("impcount").textContent = list.length ? open + " open, " + (list.length - open) + " closed" : "";
     if (!list.length) { $("ilist").innerHTML = '<div class="iempty">No incidents on the MOC screen yet.</div>'; return; }
@@ -1170,7 +1172,7 @@ window.MOC_DATA = {
       const isNew = impNew[i.id] && Date.now() - impNew[i.id] < 2500;
       const ref = incRef(i.id);
       return '<div class="ir ' + esc(i.status) + (isNew ? " new" : "") + '" data-id="' + esc(i.id) + '"><i></i><span class="ref">' + esc(ref) + '</span><span class="tm">' + esc(i.rel_game || i.sim || "") + '</span>' +
-        '<div class="tt"><b>' + esc(i.title) + (i.escalated ? '<small class="esc up">Escalated</small>' : "") + '</b><span>' + esc([i.zone, i.venue].filter(Boolean).join(", ")) + (i.lead ? " | Lead: " + esc(i.lead) : "") + '</span>' + (up ? '<em>' + esc(up.body) + '</em>' : "") + '</div>' +
+        '<div class="tt"><b>' + esc(i.title) + (i.moc_kind === "esc" ? '<small class="esc up">Escalated: action</small>' : i.moc_kind === "info" ? '<small class="esc">For awareness</small>' : "") + '</b><span>' + esc([i.zone, i.venue].filter(Boolean).join(", ")) + (i.lead ? " | Lead: " + esc(i.lead) : "") + '</span>' + (up ? '<em>' + esc(up.body) + '</em>' : "") + '</div>' +
         '<span class="st">' + (IST[i.status] || esc(i.status)) + '</span></div>';
     }).join("");
   }
@@ -1191,14 +1193,14 @@ window.MOC_DATA = {
   function openInc(id) {
     const i = IMP.find(x => x.id === id); if (!i) return;
     openId = id; sure = false;
-    $("iref").textContent = incRef(i.id) + (i.escalated ? "  |  escalated by the floor" : "  |  on the MOC screen");
+    $("iref").textContent = incRef(i.id) + (i.moc_kind === "esc" ? "  |  escalated for action or decision" : i.moc_kind === "info" ? "  |  for awareness" : "  |  on the MOC screen");
     $("ititle").textContent = i.title;
     const row = (k, v, full) => v ? '<div class="' + (full ? "full" : "") + '"><dt>' + k + '</dt><dd>' + esc(v) + '</dd></div>' : "";
     const ups = (i.updates || []).map(u => '<div><span>' + esc(u.game || "") + '</span><span style="font-family:inherit;color:inherit">' + esc(u.body || ("Delivered to " + (u.target || ""))) + '</span></div>').join("");
     $("ibody").innerHTML = row("Location", [i.venue, i.zone].filter(Boolean).join(", ")) + row("Status", IST[i.status] || i.status) +
       row("Lead department", i.lead) + row("From", FLN[i.rel_floor] || (i.rel_floor ? "Floor " + i.rel_floor : "")) +
       row("Reported", i.rel_game) + row("Delivered to", i.delivered_to ? i.delivered_to + (i.del_game ? " at " + i.del_game : "") : "") +
-      row("Escalated to the MOC", i.moc_game) + row("Supporting departments", i.support, true) +
+      row(i.moc_kind === "esc" ? "Escalated to the MOC" : "MOC informed", i.moc_game) + row("Supporting departments", i.support, true) +
       (ups ? '<div class="full"><dt>Latest updates</dt><dd class="iup">' + ups + '</dd></div>' : "");
     $("iback").textContent = "Send back to the floor"; $("iback").classList.remove("sure");
     $("inote").value = ""; $("imsg").textContent = "";

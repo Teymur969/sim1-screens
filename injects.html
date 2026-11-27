@@ -449,6 +449,9 @@ async function act(action, id, data, floor) {
 }
 function evsFor(id) { return DB.events.filter((e) => e.inject_id === id); }
 function lastUpdate(id) { const l = evsFor(id).filter((e) => ["update", "deliver", "suggest", "note", "close"].indexOf(e.kind) >= 0); return l[l.length - 1]; }
+/*MOCKIND*/ function mocKind(id) { const l = evsFor(id).filter((e) => e.kind === "moc"); return l.length ? (l[l.length - 1].method === "Escalation" ? "esc" : "info") : null; }
+function mocBtns(x) { const k = mocKind(x.id); return (k ? "" : '<button data-f="mocinfo" data-id="' + H(x.id) + '">Inform MOC (awareness)</button>') + (k === "esc" ? "" : '<button class="pink" data-f="mocesc" data-id="' + H(x.id) + '">Escalate to MOC (action)</button>'); }
+function mocWord(id) { const k = mocKind(id); return k === "esc" ? "escalated to the MOC" : k === "info" ? "MOC informed" : ""; }
 function countUpdates(id) { return evsFor(id).filter((e) => e.kind === "update").length; }
 
 function evText(e) {
@@ -458,7 +461,7 @@ function evText(e) {
     case "ack": return "The floor manager opened the card.";
     case "deliver": return "Delivered" + (t ? " to <b>" + t + "</b>" : "") + (e.method ? " (" + H(e.method) + ")" : "") + "." + (b ? " " + b : "");
     case "update": return (e.method ? "<b>" + H(e.method) + ".</b> " : "") + (t ? "The player contacted <b>" + t + "</b>" + (e.target_floor ? " (" + FN(e.target_floor) + ")" : "") + ". " : "") + b;
-    case "moc": return "The MOC has been informed.";
+    case "moc": return e.method === "Escalation" ? "<b>Escalated to the MOC</b> for action or a decision." : "The MOC was informed for awareness.";
     case "suggest": return "The floor asks to close it." + (b ? " Outcome: " + b : "");
     case "close": return "SIM Control closed it." + (b ? " " + b : "");
     case "travel": return b ? "Expected to travel to " + b + "." : "No floor is expected any more.";
@@ -562,18 +565,19 @@ function updateModal(id) {
     '<label class="f">How did the player act?</label><div class="opts" id="uHow">' + CFG.METHODS.map((m) => '<button data-v="' + m + '">' + m + "</button>").join("") + "</div>" +
     '<label class="f">Who did the player contact? Pick one only if you know.</label><div class="opts" id="uTo">' + spacesHtml() + "</div>" +
     '<label class="f">What happened?</label><textarea id="uBody" placeholder="For example: the Zone Manager sent two stewards and asked Logistics for barriers."></textarea>' +
-    (i.moc_at ? '<p class="muted" style="margin-top:10px">The MOC was informed at ' + fmtT(i.moc_at) + ".</p>" : '<label style="display:flex;gap:8px;margin-top:12px;font-weight:700"><input type="checkbox" id="uMoc"> The MOC has now been informed</label>') +
+    (mocKind(i.id) === "esc" ? '<p class="muted" style="margin-top:10px">Escalated to the MOC at ' + fmtT(i.moc_at) + ".</p>" : (mocKind(i.id) ? '<p class="muted" style="margin-top:10px">The MOC was informed for awareness at ' + fmtT(i.moc_at) + ".</p>" : '<label style="display:flex;gap:8px;margin-top:12px;font-weight:700"><input type="checkbox" id="uMoc"> Inform MOC (awareness)</label>') + '<label style="display:flex;gap:8px;margin-top:8px;font-weight:700;color:#C42F7A"><input type="checkbox" id="uEsc"> Escalate to MOC (action or decision)</label>') +
     '<div class="foot"><button class="ghost" id="mx">Cancel</button><button class="ink big" id="uGo">Save update</button></div>');
   const how = optGroup($("uHow")), to = optGroup($("uTo"));
   $("mx").onclick = closeModal;
   $("uGo").onclick = async () => {
     const body = $("uBody").value.trim(), m = how()[0], sp = CFG.SPACES.find((s) => s.id === to()[0]);
-    const moc = $("uMoc") && $("uMoc").checked;
-    if (!body && !m && !sp && !moc) { toast("Write what happened or pick an option.", true); return; }
+    const moc = $("uMoc") && $("uMoc").checked, esc = $("uEsc") && $("uEsc").checked;
+    if (!body && !m && !sp && !moc && !esc) { toast("Write what happened or pick an option.", true); return; }
     $("uGo").disabled = true;
     let r = true;
     if (body || m || sp) r = await act("update", id, { method: m || null, target: sp ? sp.label : null, targetFloor: sp && sp.floor ? String(sp.floor) : null, body });
-    if (r && moc) r = await act("moc", id, {});
+    if (r && esc) r = await act("moc", id, { method: "Escalation" });
+    else if (r && moc) r = await act("moc", id, { method: "Awareness" });
     if (r) { closeModal(); toast("Update saved."); } else $("uGo").disabled = false;
   };
 }
@@ -847,14 +851,14 @@ function renderFloor() {
     let btns = "";
     if (mode === "todo") btns = '<button class="teal big" data-f="deliver" data-id="' + H(x.id) + '">Delivered</button>';
     else if (x.status === "closing") btns = '<button data-f="update" data-id="' + H(x.id) + '">Add update</button>';
-    else btns = '<button class="ink" data-f="update" data-id="' + H(x.id) + '">Add update</button>' + (x.moc_at ? "" : '<button data-f="moc" data-id="' + H(x.id) + '">MOC informed</button>') + (mode === "play" ? '<button class="pink" data-f="suggest" data-id="' + H(x.id) + '">Ask to close</button>' : "");
+    else btns = '<button class="ink" data-f="update" data-id="' + H(x.id) + '">Add update</button>' + mocBtns(x) + (mode === "play" ? '<button class="pink" data-f="suggest" data-id="' + H(x.id) + '">Ask to close</button>' : "");
     btns += '<button class="ghost" data-f="detail" data-id="' + H(x.id) + '">Details</button>';
     return '<div class="fcard' + (mode === "todo" ? " todo" : "") + '"><div class="row"><span class="id" style="font-size:20px">' + H(x.id) + "</span>" + stChip(x.status) + (mode === "watch" ? floorChip(x.rel_floor) : "") + '<span class="sp"></span><span class="muted">Exercise ' + H(x.sim || "") + "</span></div>" +
       '<div class="ti">' + H(x.title) + '</div><div class="where">' + H(x.venue || "") + (x.zone ? " · " + H(x.zone) : "") + "</div>" +
       (mode === "watch" && (x.travel || []).indexOf(ME.floor) >= 0 ? '<div class="note" style="background:#EEF0FA;border:1.5px dashed #7781B8">Expected to come to your floor. It started on ' + H(FN(x.rel_floor)) + ". Be ready when the players reach you.</div>" : "") +
       '<div class="kv">Lead: <b>' + H(x.lead || "") + "</b>" + (x.support ? " · Also: " + H(x.support) : "") + "</div>" +
       (x.note ? '<div class="note">' + H(x.note) + "</div>" : "") +
-      (mode !== "todo" ? '<div class="kv">Delivered ' + (fmtT(x.delivered_at) || "-") + (x.delivered_to ? " to " + H(x.delivered_to) : "") + " · MOC informed " + (fmtT(x.moc_at) || "not yet") + " · " + countUpdates(x.id) + " updates</div>" : '<div class="kv">Released at ' + fmtT(x.released_at) + "</div>") +
+      (mode !== "todo" ? '<div class="kv">Delivered ' + (fmtT(x.delivered_at) || "-") + (x.delivered_to ? " to " + H(x.delivered_to) : "") + " · MOC " + (x.moc_at ? mocWord(x.id) + " " + fmtT(x.moc_at) : "not yet") + " · " + countUpdates(x.id) + " updates</div>" : '<div class="kv">Released at ' + fmtT(x.released_at) + "</div>") +
       (lu && mode !== "todo" ? '<div class="note" style="background:var(--bg2)"><b>' + fmtT(lu.at) + "</b> " + evText(lu) + "</div>" : "") +
       (x.status === "closing" ? '<div class="muted" style="margin-top:8px">You asked to close this. SIM Control will confirm.</div>' : "") +
       '<div class="btns">' + btns + "</div></div>";
@@ -905,7 +909,8 @@ async function flClick(e) {
   if (c === "update") return updateModal(id);
   if (c === "suggest") return suggestModal(id);
   if (c === "detail") return detailModal(id);
-  if (c === "moc") { const r = await act("moc", id, {}); if (r) toast("The MOC is logged as informed for inject " + id + "."); }
+  if (c === "moc" || c === "mocinfo") { const r = await act("moc", id, { method: "Awareness" }); if (r) toast("Inject " + id + ": the MOC is informed for awareness."); }
+  if (c === "mocesc") { const r = await act("moc", id, { method: "Escalation" }); if (r) toast("Inject " + id + " is escalated to the MOC for action or a decision. It is on the MOC screen."); }
 }
 
 /* ---------------------------------------------------------------- Excel export */
@@ -920,7 +925,7 @@ function exportXlsx() {
       minsBetween(x.released_at, x.delivered_at), minsBetween(x.delivered_at, x.moc_at), minsBetween(x.delivered_at, x.closed_at), countUpdates(x.id), FNs(x.involved), x.note, plain(lu)];
   });
   const head2 = ["Real time", "Exercise time", "Inject", "Title", "Action", "Floor", "By", "Method", "Contacted", "Contacted floor", "Text"];
-  const KN = { release: "Released", ack: "Card opened", deliver: "Delivered", update: "Update", moc: "MOC informed", suggest: "Close requested", close: "Closed", reopen: "Opened again", skip: "Skipped", unskip: "Back to queue", unrelease: "Recalled", priority: "Priority", wall: "MOC screen flag", note: "SIM Control note", editnote: "Note changed", adhoc: "Ad hoc created", travel: "Travel floors set" };
+  const KN = { release: "Released", ack: "Card opened", deliver: "Delivered", update: "Update", moc: "MOC informed or escalated", suggest: "Close requested", close: "Closed", reopen: "Opened again", skip: "Skipped", unskip: "Back to queue", unrelease: "Recalled", priority: "Priority", wall: "MOC screen flag", note: "SIM Control note", editnote: "Note changed", adhoc: "Ad hoc created", travel: "Travel floors set" };
   const rows2 = DB.events.map((e) => [fmtT(e.at, 1), e.game, e.inject_id, (DB.by[e.inject_id] || {}).title, KN[e.kind] || e.kind, FN(e.floor), e.actor, e.method, e.target, FN(e.target_floor), e.body]);
   const blob = XLSX([{ name: "Injects", head: head1, rows: rows1, widths: [7, 9, 10, 9, 48, 22, 30, 9, 16, 8, 14, 9, 10, 10, 10, 10, 14, 26, 12, 10, 10, 10, 10, 10, 10, 9, 10, 30, 50] },
                      { name: "Log", head: head2, rows: rows2, widths: [10, 10, 8, 44, 16, 7, 14, 13, 24, 9, 60] }]);

@@ -1203,6 +1203,69 @@ window.MOC_DATA = {
   });
   render();
 })();
+</script><script>/* SIM1 screen control: clock speed plan reminder (MEL v4 Belgrade timings).
+   Shows which speed each play block needs, warns before a block change, and can change it for you. */
+(function () {
+  const X = window.CTRL, $ = (id) => document.getElementById(id);
+  const PLAN = [
+    { from: 420,  to: 570,  speed: 5,    label: "Block 1A, 07:00 to 09:30", note: "150 game minutes in 30 real minutes" },
+    { from: 570,  to: 690,  speed: 1.33, label: "Block 1B, 09:30 to 11:30", note: "120 game minutes in 90 real minutes" },
+    { from: 900,  to: 930,  speed: 1,    label: "Block 2A, 15:00 to 15:30", note: "real time" },
+    { from: 1110, to: 1290, speed: 1.8,  label: "Block 2B, 18:30 to 21:30", note: "180 game minutes in 100 real minutes" }
+  ];
+  const css = document.createElement("style");
+  css.textContent = `
+  #spd{position:fixed;right:18px;bottom:18px;z-index:80;width:420px;border-radius:16px;padding:14px 16px;background:#fff;border:2px solid var(--rule2,#DDE2EA);box-shadow:0 10px 30px rgba(13,12,78,.18);font-size:14px}
+  #spd h4{margin:0 0 6px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute,#516578);display:flex;gap:8px;align-items:center}
+  #spd h4 span{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400}
+  #spd .big{font-size:17px;font-weight:700;color:var(--ink,#0D0C4E);margin:2px 0}
+  #spd .row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+  #spd.warn{border-color:#E08A1E;background:#FFF7EA}
+  #spd.bad{border-color:#D7263D;background:#FDECEE;animation:spdp 1.2s infinite}
+  @keyframes spdp{50%{box-shadow:0 0 0 6px rgba(215,38,61,.2)}}
+  #spd.min{width:auto;padding:8px 12px}
+  #spd.min .body{display:none}
+  #spd label{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--mute,#516578)}`;
+  document.head.appendChild(css);
+  const box = document.createElement("div"); box.id = "spd";
+  box.innerHTML = '<h4>Clock speed plan <span><button class="small" id="spdmin">Hide</button></span></h4><div class="body"><div class="big" id="spdnow"></div><div id="spdtxt" class="muted"></div><div class="row"><button class="ink" id="spdgo" style="display:none"></button><label><input type="checkbox" id="spdauto"> Change speed automatically at each block</label></div></div>';
+  document.body.appendChild(box);
+  let auto = false; try { auto = localStorage.getItem("sim1-speed-auto") === "1"; } catch (e) { }
+  $("spdauto").checked = auto;
+  $("spdauto").onchange = () => { auto = $("spdauto").checked; try { localStorage.setItem("sim1-speed-auto", auto ? "1" : "0"); } catch (e) { } tick(); };
+  $("spdmin").onclick = () => { box.classList.toggle("min"); $("spdmin").textContent = box.classList.contains("min") ? "Speed plan" : "Hide"; };
+  function setSpeed(v) { $("speed").value = v; $("b-speed").click(); }
+  let lastBlock = null, beeped = {}, ctx = null;
+  function beep() { try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); [0, .25].forEach(t => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 988; g.gain.setValueAtTime(.0001, ctx.currentTime + t); g.gain.exponentialRampToValueAtTime(.25, ctx.currentTime + t + .02); g.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + t + .2); o.connect(g).connect(ctx.destination); o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + .25); }); } catch (e) { } }
+  function tick() {
+    const S = X.S; if (!S || !S.clock) return;
+    const g = SIM.gameMinutes(S), sp = +S.clock.speed, run = S.clock.running && S.status === "live";
+    const cur = PLAN.find(b => g >= b.from && g < b.to), next = PLAN.find(b => b.from > g);
+    let cls = "", txt = "", btn = null;
+    if (cur) {
+      $("spdnow").textContent = cur.label + ": ×" + cur.speed;
+      const wrong = Math.abs(sp - cur.speed) > 0.01;
+      const toNext = next && next.from - g <= 4 && next.from === cur.to ? next : null;
+      if (wrong) { cls = "bad"; txt = "The clock is running at ×" + sp + ". This block needs ×" + cur.speed + " (" + cur.note + ")."; btn = cur.speed; }
+      else if (toNext) { cls = "warn"; txt = "At " + SIM.fmt(toNext.from) + " change to ×" + toNext.speed + " (" + toNext.label + ")."; btn = toNext.speed; }
+      else txt = "Correct speed (" + cur.note + ")." + (next ? " Next change at " + SIM.fmt(next.from) + ": ×" + next.speed + "." : "");
+      if (auto && wrong && run) { setSpeed(cur.speed); txt = "Speed changed to ×" + cur.speed + " automatically."; cls = "warn"; btn = null; }
+      if (lastBlock !== null && lastBlock !== cur.from && wrong && !beeped[cur.from]) { beeped[cur.from] = 1; beep(); }
+      lastBlock = cur.from;
+    } else {
+      $("spdnow").textContent = "Between play blocks";
+      txt = next ? "Next block " + next.label + " at ×" + next.speed + ". Jump the clock to " + SIM.fmt(next.from) + " when you restart." : "No more play blocks today.";
+      if (next) btn = next.speed;
+    }
+    $("spdtxt").textContent = txt;
+    box.className = cls + (box.classList.contains("min") ? " min" : "");
+    if (btn !== null && Math.abs(sp - btn) > 0.01) { $("spdgo").style.display = ""; $("spdgo").textContent = "Set speed ×" + btn; $("spdgo").onclick = () => setSpeed(btn); }
+    else $("spdgo").style.display = "none";
+  }
+  SIM.onState(() => setTimeout(tick, 0));
+  setInterval(tick, 1000);
+  tick();
+})();
 </script><!--MOC-END-->
 </body>
 </html>
