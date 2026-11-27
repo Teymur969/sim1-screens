@@ -31,6 +31,21 @@ body.m-inj #pScr, body.m-scr #pInj{flex:0 0 0 !important;width:0;overflow:hidden
 body.m-inj #div, body.m-scr #div{display:none}
 body.m-inj #pInj, body.m-scr #pScr{flex:1 1 auto !important}
 body.swap #wrap{flex-direction:row-reverse}
+.bar .rst{border:2px solid #E4405F;color:#fff;background:transparent;font:700 13px/1 inherit;padding:7px 12px;border-radius:8px;cursor:pointer;margin-left:6px}
+.bar .rst:hover{background:#E4405F}
+#rmask{display:none;position:fixed;inset:0;background:rgba(13,12,78,.55);z-index:20;align-items:center;justify-content:center}
+#rmask.on{display:flex}
+#rbox{background:#fff;color:#0D0C4E;border-radius:16px;padding:26px 28px;width:min(560px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+#rbox h2{margin:0 0 10px;font-size:22px}
+#rbox ul{margin:8px 0 14px;padding-left:20px;line-height:1.45;font-size:14px}
+#rbox .muted{color:#516578;font-size:13px}
+#rbox input{width:100%;font:600 18px/1 inherit;padding:10px 12px;border:2px solid #DDE2EA;border-radius:10px;margin:8px 0 4px;text-transform:uppercase}
+#rbox .err{color:#C8102E;font-size:14px;min-height:20px;margin:6px 0}
+#rbox .ok{color:#0E7C66;font-size:14px;min-height:20px;margin:6px 0}
+#rbox .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+#rbox button{font:700 15px/1 inherit;padding:11px 18px;border-radius:10px;cursor:pointer;border:2px solid #0D0C4E;background:#fff;color:#0D0C4E}
+#rbox button.go{background:#E4405F;border-color:#E4405F;color:#fff}
+#rbox button:disabled{opacity:.4;cursor:default}
 </style>
 </head>
 <body>
@@ -46,7 +61,8 @@ body.swap #wrap{flex-direction:row-reverse}
   <span class="hint">Alt+1 both · Alt+2 injects · Alt+3 screens</span>
   <div class="sp"></div>
   <a href="injects.html?view=control" target="_blank" rel="noopener">Injects in new tab</a>
-  <a href="control.html" target="_blank" rel="noopener">Screens in new tab</a>
+    <a href="control.html" target="_blank" rel="noopener">Screens in new tab</a>
+  <button class="rst" id="rst">Reset for live</button>
 </div>
 <div id="wrap">
   <div class="pane" id="pInj"><iframe id="fInj" title="Inject tracker, SIM Control" allow="autoplay" src="injects.html?view=control"></iframe></div>
@@ -54,6 +70,20 @@ body.swap #wrap{flex-direction:row-reverse}
   <div class="pane" id="pScr"><iframe id="fScr" title="Screen control" allow="autoplay" src="control.html"></iframe></div>
   <div id="shield"></div>
 </div>
+<div id="rmask"><div id="rbox">
+  <h2>Reset for live</h2>
+  <div class="muted">Use this once, after the rehearsal and before play starts.</div>
+  <ul>
+    <li><b>Inject tracker:</b> clears every delivery, update and log entry, removes ad hoc injects (X numbers) and puts all MEL injects back to Queued. Notes and A/B priorities stay.</li>
+    <li><b>Floor screens:</b> Standby, clock back to 07:00 and stopped, no message, every floor on the clock. The screen activity log is cleared.</li>
+    <li>Floor managers stay signed in. Their pages update by themselves.</li>
+    <li>It is refused while the screens are Live.</li>
+  </ul>
+  <div class="muted">Type <b>RESET</b> to confirm. This cannot be undone.</div>
+  <input id="rin" autocomplete="off" spellcheck="false">
+  <div class="err" id="rerr"></div>
+  <div class="row"><button id="rno">Cancel</button><button class="go" id="rgo" disabled>Reset now</button></div>
+</div></div>
 <script>
 (function(){
   var KEY = "sim1-hub";
@@ -105,6 +135,50 @@ body.swap #wrap{flex-direction:row-reverse}
     window.addEventListener("mousemove", mv); window.addEventListener("mouseup", up);
   });
   dv.addEventListener("dblclick", function(){ st.r = 0.6; save(); apply(); });
+  /* ---------- Reset for live ---------- */
+  var DEMO = /[?&]demo=1/.test(location.search);
+  var SB = "https://eucitvefgvbejldtnqmp.supabase.co", KEYPUB = "sb_publishable_bReRpMdlSqUaZSAhnLupMA_f6F9uPVw";
+  var rm = document.getElementById("rmask"), rin = document.getElementById("rin"), rgo = document.getElementById("rgo"), rerr = document.getElementById("rerr");
+  function rmsg(t, ok){ rerr.textContent = t || ""; rerr.className = ok ? "ok" : "err"; }
+  function openReset(){ rin.value = ""; rgo.disabled = true; rmsg(""); rm.classList.add("on"); setTimeout(function(){ rin.focus(); }, 50); }
+  function closeReset(){ rm.classList.remove("on"); }
+  document.getElementById("rst").onclick = openReset;
+  document.getElementById("rno").onclick = closeReset;
+  rm.addEventListener("click", function(e){ if (e.target === rm) closeReset(); });
+  rin.oninput = function(){ rgo.disabled = rin.value.trim().toUpperCase() !== "RESET"; };
+  rin.onkeydown = function(e){ if (e.key === "Enter" && !rgo.disabled) rgo.click(); if (e.key === "Escape") closeReset(); };
+  function lsGet(k, store){ try { return (store || localStorage).getItem(k); } catch (e) { return null; } }
+  function rpc(fn, body){
+    return fetch(SB + "/rest/v1/rpc/" + fn, { method: "POST", headers: { apikey: KEYPUB, Authorization: "Bearer " + KEYPUB, "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      .then(function(r){ return r.text().then(function(t){ var j = null; try { j = JSON.parse(t); } catch (e) {} if (!r.ok) throw new Error((j && (j.message || j.hint)) || ("HTTP " + r.status)); return j; }); });
+  }
+  function freshState(){
+    try { var W = document.getElementById("fScr").contentWindow; if (W.SIM && W.SIM.defaultState) return W.SIM.defaultState(); } catch (e) {}
+    return { v: 1, status: "standby", clock: { gameMin: 420, realAnchor: 0, speed: 2.25, running: false }, startText: "09:45", scene: { all: "clock", floors: {} }, slide: 0, message: null, ping: null };
+  }
+  function reloadPanels(){ ["fInj","fScr"].forEach(function(id){ try { document.getElementById(id).contentWindow.location.reload(); } catch (e) {} }); }
+  rgo.onclick = function(){
+    rgo.disabled = true; rmsg("Resetting...", true);
+    if (DEMO) {
+      ["inj1-demo-db","inj1-demo-clock","sim1-demo-state"].forEach(function(k){ try { localStorage.removeItem(k); } catch (e) {} });
+      reloadPanels(); rmsg("Demo reset done.", true); setTimeout(closeReset, 1200); return;
+    }
+    var injLogin = null; try { injLogin = JSON.parse(lsGet("inj1-login:control")); } catch (e) {}
+    var injPin = injLogin && injLogin.pin, simPin = lsGet("sim1-pin", sessionStorage);
+    if (!injPin) { rmsg("Sign in to the inject panel as SIM Control first."); rgo.disabled = false; return; }
+    if (!simPin) { rmsg("Sign in to the screen panel with the passphrase first."); rgo.disabled = false; return; }
+    var st = freshState(); st.message = null; st.ping = null;
+    rpc("sim1_reset", { p_inj_pin: injPin, p_sim_pin: simPin, p_state: st }).then(function(r){
+      reloadPanels();
+      rmsg("Done. " + r.injects + " injects back to Queued, " + r.events_cleared + " log entries cleared, " + r.adhoc_removed + " ad hoc injects removed. Screens on Standby at 07:00.", true);
+      setTimeout(closeReset, 6000);
+    }).catch(function(e){
+      var m = String(e.message || e);
+      if (/sim1_reset|function|schema cache/i.test(m) && !/PIN|passphrase|live/i.test(m)) m = "The reset function is not in the database yet. Run hub_reset.sql in Supabase once.";
+      rmsg(m); rgo.disabled = false;
+    });
+  };
+
   // Pass ?demo=1 through to both panels for testing.
   if (/[?&]demo=1/.test(location.search)) {
     document.getElementById("fInj").src = "injects.html?view=control&demo=1";
