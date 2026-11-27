@@ -1197,7 +1197,7 @@ window.MOC_DATA = {
     $("ititle").textContent = i.title;
     const row = (k, v, full) => v ? '<div class="' + (full ? "full" : "") + '"><dt>' + k + '</dt><dd>' + esc(v) + '</dd></div>' : "";
     const ups = (i.updates || []).map(u => '<div><span>' + esc(u.game || "") + '</span><span style="font-family:inherit;color:inherit">' + esc(u.body || ("Delivered to " + (u.target || ""))) + '</span></div>').join("");
-    $("ibody").innerHTML = row("Location", [i.venue, i.zone].filter(Boolean).join(", ")) + row("Status", IST[i.status] || i.status) +
+    $("ibody").innerHTML = row("What was reported", i.card_desc, true) + row("DoA category", i.card_doa) + row("Location", [i.venue, i.zone].filter(Boolean).join(", ")) + row("Status", IST[i.status] || i.status) +
       row("Lead department", i.lead) + row("From", FLN[i.rel_floor] || (i.rel_floor ? "Floor " + i.rel_floor : "")) +
       row("Reported", i.rel_game) + row("Delivered to", i.delivered_to ? i.delivered_to + (i.del_game ? " at " + i.del_game : "") : "") +
       row(i.moc_kind === "esc" ? "Escalated to the MOC" : "MOC informed", i.moc_game) + row("Supporting departments", i.support, true) +

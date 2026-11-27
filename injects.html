@@ -452,6 +452,20 @@ function lastUpdate(id) { const l = evsFor(id).filter((e) => ["update", "deliver
 /*MOCKIND*/ function mocKind(id) { const l = evsFor(id).filter((e) => e.kind === "moc"); return l.length ? (l[l.length - 1].method === "Escalation" ? "esc" : "info") : null; }
 function mocBtns(x) { const k = mocKind(x.id); return (k ? "" : '<button data-f="mocinfo" data-id="' + H(x.id) + '">Inform MOC (awareness)</button>') + (k === "esc" ? "" : '<button class="pink" data-f="mocesc" data-id="' + H(x.id) + '">Escalate to MOC (action)</button>'); }
 function mocWord(id) { const k = mocKind(id); return k === "esc" ? "escalated to the MOC" : k === "info" ? "MOC informed" : ""; }
+/*CARDINFO*/ function cardBlock(i) {
+  if (!i.card_desc && !i.card_resp && !i.card_to) return "";
+  const r = (k, v) => v ? "<tr><td>" + k + "</td><td>" + H(v) + "</td></tr>" : "";
+  return '<div class="grp" style="margin-top:14px">From the scenario card</div><table class="kvt">' +
+    r("Inject text", i.card_desc) + r("Delivered by (inject player)", i.card_from) + r("Delivered to (player)", i.card_to) +
+    r("DoA category", i.card_doa) + r("Linked injects", i.card_linked) + "</table>" +
+    (i.card_resp ? '<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">Show the expected player response (keep it away from players)</summary><div class="note" style="margin-top:6px">' + H(i.card_resp) + "</div></details>" : "");
+}
+function cardTravel(i) {
+  const t = (i.card_travel || []).filter((n) => (i.travel || []).indexOf(n) < 0);
+  return t.length ? '<div class="row muted" style="margin-top:6px">Suggested from the card\'s expected response: ' + t.map((n) => H(FN(n))).join(", ") + ' <button class="sm" id="eTravelSug" data-fl="' + t.join(",") + '">Tick these</button> then Save travel floors.</div>' : "";
+}
+document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("#eTravelSug"); if (!b) return;
+  b.dataset.fl.split(",").forEach((n) => { const c = document.querySelector('#eTravel input[value="' + n + '"]'); if (c) c.checked = true; }); });
 function countUpdates(id) { return evsFor(id).filter((e) => e.kind === "update").length; }
 
 function evText(e) {
@@ -634,11 +648,12 @@ function detailModal(id) {
     "<tr><td>Floors involved</td><td>" + ((i.involved || []).map(floorChip).join(" ") || "-") + "</td></tr>" +
     "<tr><td>Expected to travel to</td><td>" + (travelChips(i) || "-") + "</td></tr>" +
     "</table>" +
+    cardBlock(i) +
     (btns ? '<div class="row" id="dBtns" style="margin-top:12px">' + btns + "</div>" : "") +
     (ctl ? '<details style="margin-top:12px"><summary>SIM Control tools</summary>' +
       '<div class="row" style="margin-top:6px"><span class="muted">Priority</span><button class="sm" data-p="A">A</button><button class="sm" data-p="B">B</button><button class="sm" data-p="">None</button>' +
       '<label style="margin-left:12px;display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="eWall"' + (i.wall ? " checked" : "") + "> Show on the MOC screen (IMP panel)</label></div>" +
-      '<label class="f">Expected to travel to (those floors see it in their feed and get a soft alert at release)</label><div class="row" id="eTravel" style="flex-wrap:wrap;gap:6px">' + CFG.FLOORS.map((f) => '<label style="display:inline-flex;gap:5px;align-items:center;border:1px solid var(--rule);border-radius:999px;padding:3px 10px;font-size:12px"><input type="checkbox" value="' + f.n + '"' + ((i.travel || []).indexOf(f.n) >= 0 ? " checked" : "") + "> " + H(FN(f.n)) + "</label>").join("") + '</div><div class="row" style="margin-top:6px"><button class="sm" id="eTravelGo">Save travel floors</button></div>' +
+      '<label class="f">Expected to travel to (those floors see it in their feed and get a soft alert at release)</label><div class="row" id="eTravel" style="flex-wrap:wrap;gap:6px">' + CFG.FLOORS.map((f) => '<label style="display:inline-flex;gap:5px;align-items:center;border:1px solid var(--rule);border-radius:999px;padding:3px 10px;font-size:12px"><input type="checkbox" value="' + f.n + '"' + ((i.travel || []).indexOf(f.n) >= 0 ? " checked" : "") + "> " + H(FN(f.n)) + "</label>").join("") + '</div>' + cardTravel(i) + '<div class="row" style="margin-top:6px"><button class="sm" id="eTravelGo">Save travel floors</button></div>' +
       '<label class="f">Note on the inject card</label><textarea id="eNote">' + H(keepNote != null ? keepNote : i.note || "") + '</textarea><div class="row" style="margin-top:6px"><button class="sm" id="eNoteGo">Save note</button></div>' +
       '<label class="f">Add a SIM Control note to the log</label><textarea id="eLog" placeholder="For example: we gave the floor more time because the room is busy."></textarea><div class="row" style="margin-top:6px"><button class="sm" id="eLogGo">Add to log</button></div>' +
       "</details>" : "") +
