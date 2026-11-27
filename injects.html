@@ -170,6 +170,7 @@ details>summary{cursor:pointer;font-weight:700;font-size:12px;color:var(--mute);
 @media (max-width:1100px){.cols{grid-template-columns:1fr}.scroll{max-height:none}}
 @media (max-width:600px){header{gap:10px;padding:8px 10px}header img{display:none}.hclock b{font-size:22px}.hide-s{display:none}}
 .chip.wl{background:#EE4D9B;color:#fff;border-color:#EE4D9B}
+.chip.mk{background:#E9EBF6;color:#3B437A;border-color:#7781B8;font-weight:700}.chip.mk.esc{background:#FDE3F0;color:#C42F7A;border-color:#EE4D9B}.chip.mk.bk{background:#fff;border-style:dashed}
 </style>
 </head>
 <body>
@@ -449,9 +450,10 @@ async function act(action, id, data, floor) {
 }
 function evsFor(id) { return DB.events.filter((e) => e.inject_id === id); }
 function lastUpdate(id) { const l = evsFor(id).filter((e) => ["update", "deliver", "suggest", "note", "close"].indexOf(e.kind) >= 0); return l[l.length - 1]; }
-/*MOCKIND*/ function mocKind(id) { const l = evsFor(id).filter((e) => e.kind === "moc"); return l.length ? (l[l.length - 1].method === "Escalation" ? "esc" : "info") : null; }
-function mocBtns(x) { const k = mocKind(x.id); return (k ? "" : '<button data-f="mocinfo" data-id="' + H(x.id) + '">Inform MOC (awareness)</button>') + (k === "esc" ? "" : '<button class="pink" data-f="mocesc" data-id="' + H(x.id) + '">Escalate to MOC (action)</button>'); }
-function mocWord(id) { const k = mocKind(id); return k === "esc" ? "escalated to the MOC" : k === "info" ? "MOC informed" : ""; }
+/*MOCKIND*/ /*MOCKIND2*/ function mocKind(id) { const l = evsFor(id).filter((e) => e.kind === "moc" || (e.kind === "update" && e.method === "MOC")); if (!l.length) return null; const z = l[l.length - 1]; return z.kind === "update" ? "back" : z.method === "Escalation" ? "esc" : "info"; }
+function mocChip(id) { const k = mocKind(id); return k === "esc" ? '<span class="chip mk esc">Escalated to MOC for decision or action</span>' : k === "info" ? '<span class="chip mk">Informed MOC for awareness</span>' : k === "back" ? '<span class="chip mk bk">MOC sent it back to the floor</span>' : ""; }
+function mocBtns(x) { const k = mocKind(x.id); return (k ? "" : '<button data-f="mocinfo" data-id="' + H(x.id) + '">Inform MOC (awareness)</button>') + (k === "esc" ? "" : '<button class="pink" data-f="mocesc" data-id="' + H(x.id) + '">Escalate to MOC (decision or action)</button>'); }
+function mocWord(id) { const k = mocKind(id); return k === "esc" ? "escalated for decision or action" : k === "info" ? "informed for awareness" : k === "back" ? "sent it back to the floor" : ""; }
 /*CARDINFO*/ function cardBlock(i) {
   if (!i.card_desc && !i.card_resp && !i.card_to) return "";
   const r = (k, v) => v ? "<tr><td>" + k + "</td><td>" + H(v) + "</td></tr>" : "";
@@ -475,9 +477,9 @@ function evText(e) {
     case "ack": return "The floor manager opened the card.";
     case "deliver": return "Delivered" + (t ? " to <b>" + t + "</b>" : "") + (e.method ? " (" + H(e.method) + ")" : "") + "." + (b ? " " + b : "");
     case "update": return (e.method ? "<b>" + H(e.method) + ".</b> " : "") + (t ? "The player contacted <b>" + t + "</b>" + (e.target_floor ? " (" + FN(e.target_floor) + ")" : "") + ". " : "") + b;
-    case "moc": return e.method === "Escalation" ? "<b>Escalated to the MOC</b> for action or a decision." : "The MOC was informed for awareness.";
+    case "moc": return e.method === "Escalation" ? "<b>Escalated to the MOC</b> for decision or action." : "<b>Informed MOC</b> for awareness.";
     case "suggest": return "The floor asks to close it." + (b ? " Outcome: " + b : "");
-    case "close": return "SIM Control closed it." + (b ? " " + b : "");
+    case "close": return (e.method === "MOC" ? "<b>The MOC closed it.</b>" : "SIM Control closed it.") + (b ? " " + b : "");
     case "travel": return b ? "Expected to travel to " + b + "." : "No floor is expected any more.";
     case "reopen": return "SIM Control opened it again.";
     case "skip": return "SIM Control skipped it.";
@@ -579,7 +581,7 @@ function updateModal(id) {
     '<label class="f">How did the player act?</label><div class="opts" id="uHow">' + CFG.METHODS.map((m) => '<button data-v="' + m + '">' + m + "</button>").join("") + "</div>" +
     '<label class="f">Who did the player contact? Pick one only if you know.</label><div class="opts" id="uTo">' + spacesHtml() + "</div>" +
     '<label class="f">What happened?</label><textarea id="uBody" placeholder="For example: the Zone Manager sent two stewards and asked Logistics for barriers."></textarea>' +
-    (mocKind(i.id) === "esc" ? '<p class="muted" style="margin-top:10px">Escalated to the MOC at ' + fmtT(i.moc_at) + ".</p>" : (mocKind(i.id) ? '<p class="muted" style="margin-top:10px">The MOC was informed for awareness at ' + fmtT(i.moc_at) + ".</p>" : '<label style="display:flex;gap:8px;margin-top:12px;font-weight:700"><input type="checkbox" id="uMoc"> Inform MOC (awareness)</label>') + '<label style="display:flex;gap:8px;margin-top:8px;font-weight:700;color:#C42F7A"><input type="checkbox" id="uEsc"> Escalate to MOC (action or decision)</label>') +
+    (mocKind(i.id) === "back" ? '<p class="muted" style="margin-top:10px">The MOC sent this back to the floor.</p><label style="display:flex;gap:8px;margin-top:8px;font-weight:700;color:#C42F7A"><input type="checkbox" id="uEsc"> Escalate to MOC again (decision or action)</label>' : mocKind(i.id) === "esc" ? '<p class="muted" style="margin-top:10px">Escalated to the MOC at ' + fmtT(i.moc_at) + ".</p>" : (mocKind(i.id) ? '<p class="muted" style="margin-top:10px">The MOC was informed for awareness at ' + fmtT(i.moc_at) + ".</p>" : '<label style="display:flex;gap:8px;margin-top:12px;font-weight:700"><input type="checkbox" id="uMoc"> Inform MOC (awareness)</label>') + '<label style="display:flex;gap:8px;margin-top:8px;font-weight:700;color:#C42F7A"><input type="checkbox" id="uEsc"> Escalate to MOC (decision or action)</label>') +
     '<div class="foot"><button class="ghost" id="mx">Cancel</button><button class="ink big" id="uGo">Save update</button></div>');
   const how = optGroup($("uHow")), to = optGroup($("uTo"));
   $("mx").onclick = closeModal;
@@ -755,7 +757,7 @@ function renderControl() {
       ? '<select class="sm" data-relfloor="' + H(x.id) + '">' + (fl.length ? fl : []).concat(CFG.FLOORS.map((f) => f.n).filter((n) => fl.indexOf(n) < 0)).map((n) => '<option value="' + n + '"' + (String(CTL["rf_" + x.id] || fl[0]) === String(n) ? " selected" : "") + ">" + H(FN(n)) + "</option>").join("") + "</select>"
       : "";
     return '<div class="qrow ' + cls + '"><div class="t">' + H(x.sim || "--") + (x.mel_real ? "<small>real " + H(x.mel_real) + "</small>" : "") + "</div>" +
-      '<div><div class="ti"><span class="id">' + H(x.id) + "</span> " + H(x.title) + '</div><div class="meta">' + fl.map(floorChip).join("") + travelChips(x) + prChip(x.priority) + (x.wall ? '<span class="chip wl">MOC screen</span>' : "") + badge +
+      '<div><div class="ti"><span class="id">' + H(x.id) + "</span> " + H(x.title) + '</div><div class="meta">' + fl.map(floorChip).join("") + travelChips(x) + mocChip(x.id) + prChip(x.priority) + (x.wall ? '<span class="chip wl">MOC screen</span>' : "") + badge +
       '<span class="muted">' + H(x.lead || "") + "</span>" + (x.note ? ' <span class="chip" title="' + H(x.note) + '" style="background:var(--amberL)">Note</span>' : "") + "</div></div>" +
       '<div class="act">' + pick + '<button class="pink sm" data-c="release" data-id="' + H(x.id) + '">Release</button>' +
       '<div class="row" style="gap:4px"><button class="sm ghost" data-c="prio" data-id="' + H(x.id) + '" title="Change priority">A/B</button><button class="sm ghost" data-c="detail" data-id="' + H(x.id) + '">Open</button></div></div></div>';
@@ -767,7 +769,7 @@ function renderControl() {
     const lu = lastUpdate(x.id), n = countUpdates(x.id);
     const wait = x.status === "released" ? Math.round((now - new Date(x.released_at)) / 60000) : 0;
     const cls = x.status === "closing" ? "closing" : x.status === "released" ? "wait" + (wait >= CFG.WAIT_WARN ? " old" : "") : "";
-    return '<div class="card ' + cls + '"><div class="top"><span class="id">' + H(x.id) + "</span>" + floorChip(x.rel_floor) + stChip(x.status) + prChip(x.priority) + (x.wall ? '<span class="chip wl">MOC screen</span>' : "") + '<span class="sp"></span><span class="muted">' + H(x.sim || "") + "</span></div>" +
+    return '<div class="card ' + cls + '"><div class="top"><span class="id">' + H(x.id) + "</span>" + floorChip(x.rel_floor) + stChip(x.status) + mocChip(x.id) + prChip(x.priority) + (x.wall ? '<span class="chip wl">MOC screen</span>' : "") + '<span class="sp"></span><span class="muted">' + H(x.sim || "") + "</span></div>" +
       '<div class="ti">' + H(x.title) + "</div>" + ((x.travel || []).length ? '<div style="margin-top:4px">' + travelChips(x) + "</div>" : "") +
       '<div class="times"><span>Released <b>' + fmtT(x.released_at) + "</b></span>" +
       (x.delivered_at ? "<span>Delivered <b>" + fmtT(x.delivered_at) + "</b></span>" : '<span class="no">Not delivered' + (wait ? " (" + wait + " min)" : "") + "</span>") +
@@ -868,7 +870,7 @@ function renderFloor() {
     else if (x.status === "closing") btns = '<button data-f="update" data-id="' + H(x.id) + '">Add update</button>';
     else btns = '<button class="ink" data-f="update" data-id="' + H(x.id) + '">Add update</button>' + mocBtns(x) + (mode === "play" ? '<button class="pink" data-f="suggest" data-id="' + H(x.id) + '">Ask to close</button>' : "");
     btns += '<button class="ghost" data-f="detail" data-id="' + H(x.id) + '">Details</button>';
-    return '<div class="fcard' + (mode === "todo" ? " todo" : "") + '"><div class="row"><span class="id" style="font-size:20px">' + H(x.id) + "</span>" + stChip(x.status) + (mode === "watch" ? floorChip(x.rel_floor) : "") + '<span class="sp"></span><span class="muted">Exercise ' + H(x.sim || "") + "</span></div>" +
+    return '<div class="fcard' + (mode === "todo" ? " todo" : "") + '"><div class="row"><span class="id" style="font-size:20px">' + H(x.id) + "</span>" + stChip(x.status) + mocChip(x.id) + (mode === "watch" ? floorChip(x.rel_floor) : "") + '<span class="sp"></span><span class="muted">Exercise ' + H(x.sim || "") + "</span></div>" +
       '<div class="ti">' + H(x.title) + '</div><div class="where">' + H(x.venue || "") + (x.zone ? " · " + H(x.zone) : "") + "</div>" +
       (mode === "watch" && (x.travel || []).indexOf(ME.floor) >= 0 ? '<div class="note" style="background:#EEF0FA;border:1.5px dashed #7781B8">Expected to come to your floor. It started on ' + H(FN(x.rel_floor)) + ". Be ready when the players reach you.</div>" : "") +
       '<div class="kv">Lead: <b>' + H(x.lead || "") + "</b>" + (x.support ? " · Also: " + H(x.support) : "") + "</div>" +
@@ -925,7 +927,7 @@ async function flClick(e) {
   if (c === "suggest") return suggestModal(id);
   if (c === "detail") return detailModal(id);
   if (c === "moc" || c === "mocinfo") { const r = await act("moc", id, { method: "Awareness" }); if (r) toast("Inject " + id + ": the MOC is informed for awareness."); }
-  if (c === "mocesc") { const r = await act("moc", id, { method: "Escalation" }); if (r) toast("Inject " + id + " is escalated to the MOC for action or a decision. It is on the MOC screen."); }
+  if (c === "mocesc") { const r = await act("moc", id, { method: "Escalation" }); if (r) toast("Inject " + id + " is escalated to the MOC for decision or action. It is on the MOC screen."); }
 }
 
 /* ---------------------------------------------------------------- Excel export */
