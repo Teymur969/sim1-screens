@@ -68,7 +68,9 @@ body.st-paused .clk{color:var(--lilac)}
 
 /* IMP */
 .imp{flex:1;min-height:0;display:flex;flex-direction:column}
-.ilist{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.ilist{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;scrollbar-width:thin;scrollbar-color:#C7CCE6 transparent}
+.ilist::-webkit-scrollbar{width:10px}.ilist::-webkit-scrollbar-thumb{background:#C7CCE6;border-radius:5px}
+.ilist .ir{flex:none}
 .ir{display:grid;grid-template-columns:8px 120px 78px 1fr 150px;gap:14px;align-items:center;padding:9px 16px 9px 0;border-bottom:1px solid var(--line)}
 .ir>i{align-self:stretch;border-radius:0 4px 4px 0;background:var(--lilac)}
 .ir.inplay>i{background:var(--pink)}.ir.closing>i{background:var(--yellow)}.ir.closed>i{background:var(--teal)}
@@ -453,6 +455,7 @@ window.SIM_DATA = {
   // Predefined screens the control page can put on any floor.
   SCENES: [
     { id: "clock",   label: "Exercise clock and run sheet" },
+    { id: "hello",   label: "Welcome to the Simulation" },
     { id: "welcome", label: "Welcome and check-in" },
     { id: "brief",   label: "MOC briefing slides" },
     { id: "lunch",   label: "Lunch break" },
@@ -1186,7 +1189,8 @@ window.MOC_DATA = {
     const open = list.filter(i => i.status !== "closed").length;
     $("impcount").textContent = list.length ? open + " open, " + (list.length - open) + " closed" : "";
     if (!list.length) { $("ilist").innerHTML = '<div class="iempty">No incidents on the MOC screen yet.</div>'; return; }
-    $("ilist").innerHTML = list.slice(0, 6).map(i => {
+    const _st = $("ilist").scrollTop;
+    $("ilist").innerHTML = list.map(i => {
       const up = (i.updates || [])[0];
       const isNew = impNew[i.id] && Date.now() - impNew[i.id] < 2500;
       const ref = incRef(i.id);
@@ -1194,6 +1198,7 @@ window.MOC_DATA = {
         '<div class="tt"><b>' + esc(i.title) + '</b><span>' + (i.moc_kind === "esc" ? '<small class="esc up">Escalated: decision or action</small>' : i.moc_kind === "info" ? '<small class="esc">Informed: awareness</small>' : "") + esc([i.zone, i.venue].filter(Boolean).join(", ")) + (i.lead ? " | Lead: " + esc(i.lead) : "") + '</span>' + (up && (up.body || up.target) ? '<em>' + esc(up.body || ("Delivered to " + up.target)) + '</em>' : "") + '</div>' +
         '<span class="st">' + (IST[i.status] || esc(i.status)) + '</span></div>';
     }).join("");
+    $("ilist").scrollTop = _st;
   }
   (function impWatch() {
     impFetch();
