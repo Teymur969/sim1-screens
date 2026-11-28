@@ -671,7 +671,13 @@ window.SIM_MENTI = {"mid": {"kicker": "Hot debrief, mid-point", "time": "11:45",
     $("airtxt").textContent = AIR[st] || st;
     document.querySelectorAll(".st-txt").forEach(e => e.textContent = s.startText || CFG.defaultStartText);
 
-    const sc = sceneFor(s);
+    /*RELOADSAFE*/
+    { const rl = s.reload || 0; if (window.__rl0 === undefined) window.__rl0 = rl; else if (rl !== window.__rl0 && !preview) { location.reload(); return; } }
+    let sc = sceneFor(s);
+    if (!document.getElementById("sc-" + sc)) {
+      try { const k = "sim1-rl-" + sc; if (!preview && !sessionStorage.getItem(k)) { sessionStorage.setItem(k, "1"); location.reload(); return; } } catch (e) { }
+      sc = "clock";
+    }
     document.querySelectorAll(".scene").forEach(e => e.classList.toggle("on", e.id === "sc-" + sc));
     if (sc === "brief") renderSlides(s);
 

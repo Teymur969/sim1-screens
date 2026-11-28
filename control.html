@@ -203,6 +203,7 @@ button.pause{background:var(--amber);border-color:var(--amber);color:#fff}
         <span class="muted" id="slinfo"></span>
         <span class="sp"></span>
         <button class="small" id="b-allclock">Put every floor back on the clock</button>
+        <button class="small" id="b-reloadall" title="Every floor screen reloads the latest version of the page">Reload all screens</button>
       </div>
     </div>
   </div>
@@ -750,6 +751,7 @@ window.SIM_DATA = {
 
   /* ---------- scenes ---------- */
   const scTargets = floorPicker($("scfloors"));
+  $("b-reloadall").onclick = () => commit(ns => { ns.reload = Date.now(); }, "Reloaded every floor screen");
   $("scenes").innerHTML = D.SCENES.map(c => '<button data-sc="'+c.id+'">'+c.label+'</button>').join("");
   $("scenes").onclick = (e) => { const b=e.target.closest("[data-sc]"); if (!b) return; const id=b.dataset.sc, t=scTargets();
     commit(s => { s.scene = s.scene || {all:"clock",floors:{}}; s.scene.floors = s.scene.floors || {};
