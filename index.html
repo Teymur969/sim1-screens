@@ -199,4 +199,6 @@ document.getElementById("list").innerHTML = SIM_DATA.FLOORS.map(f => '<a href="s
   a.href = "moc.html"; a.innerHTML = "Floor 7 | MOC screen <small>Large screen in the MOC room (F7-03-L): CCTV, IMP, DRS, weather, social</small>";
   const f7 = [...l.querySelectorAll("a")].find(x => /floor=7$/.test(x.getAttribute("href")));
   if (f7) f7.after(a); else l.appendChild(a); })();
+/*OPSLIST*/ (function(){ const l = document.getElementById("list"), m = l.querySelector('a[href="moc.html"]'), a = document.createElement("a");
+  a.href = "ops.html"; a.innerHTML = "Live injects | MOC Management and Site Control <small>Sign in with name, role and the ops PIN</small>"; if (m) m.after(a); else l.appendChild(a); })();
 </script></body></html>

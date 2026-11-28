@@ -479,7 +479,7 @@ function evText(e) {
     case "update": return (e.method ? "<b>" + H(e.method) + ".</b> " : "") + (t ? "The player contacted <b>" + t + "</b>" + (e.target_floor ? " (" + FN(e.target_floor) + ")" : "") + ". " : "") + b;
     case "moc": return e.method === "Escalation" ? "<b>Escalated to the MOC</b> for decision or action." : "<b>Informed MOC</b> for awareness.";
     case "suggest": return "The floor asks to close it." + (b ? " Outcome: " + b : "");
-    case "close": return (e.method === "MOC" ? "<b>The MOC closed it.</b>" : "SIM Control closed it.") + (b ? " " + b : "");
+    case "close": return (e.method === "MOC" ? "<b>The MOC closed it.</b>" : e.role === "ops" && e.method ? "<b>" + H(e.method) + " closed it.</b>" : "SIM Control closed it.") + (b ? " " + b : "");
     case "travel": return b ? "Expected to travel to " + b + "." : "No floor is expected any more.";
     case "reopen": return "SIM Control opened it again.";
     case "skip": return "SIM Control skipped it.";
