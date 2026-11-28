@@ -37,6 +37,32 @@ body.st-paused .air i{background:#fff;border-radius:3px;width:18px}
 .main{flex:1;position:relative;min-height:0;overflow:hidden}
 .scene{position:absolute;inset:0;display:none}
 .scene.on{display:flex}
+/*HELLO*/
+#sc-hello{overflow:hidden;background:radial-gradient(1200px 700px at 85% 10%,#F3E9FB 0%,rgba(243,233,251,0) 60%),radial-gradient(900px 600px at 0% 100%,#E6F4F2 0%,rgba(230,244,242,0) 60%),#fff}
+#sc-hello .blob{position:absolute;border-radius:50%;filter:blur(2px);opacity:.9;animation:hdrift 18s ease-in-out infinite alternate}
+#sc-hello .b1{width:340px;height:340px;background:var(--pink);right:330px;top:-90px;opacity:.85}
+#sc-hello .b2{width:220px;height:220px;background:var(--yellow);right:90px;top:190px;animation-delay:-6s}
+#sc-hello .b3{width:260px;height:260px;background:var(--lilac);right:470px;top:420px;animation-delay:-3s;opacity:.75}
+#sc-hello .b4{width:150px;height:150px;background:var(--teal);right:250px;bottom:-40px;animation-delay:-9s;opacity:.8}
+#sc-hello .b5{width:110px;height:110px;background:var(--orange);right:690px;top:120px;animation-delay:-12s}
+@keyframes hdrift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-26px,18px) scale(1.06)}100%{transform:translate(18px,-22px) scale(.96)}}
+#sc-hello .ring{position:absolute;right:210px;top:110px;width:600px;height:600px;border-radius:50%;border:3px dashed rgba(13,12,78,.16);animation:hspin 90s linear infinite}
+#sc-hello .ring i{position:absolute;left:50%;top:-11px;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:var(--ink)}
+@keyframes hspin{to{transform:rotate(360deg)}}
+#sc-hello .seal{position:absolute;right:360px;top:260px;width:300px;height:300px;border-radius:50%;background:#fff;box-shadow:0 30px 80px rgba(13,12,78,.18);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:2}
+#sc-hello .seal b{font-size:92px;font-weight:800;color:var(--ink);letter-spacing:-.02em;line-height:1}
+#sc-hello .seal span{font-size:22px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--pink)}
+#sc-hello .seal small{font-size:20px;color:var(--mute)}
+#sc-hello .hx{position:relative;z-index:3;display:flex;flex-direction:column;justify-content:center;padding:0 0 0 120px;gap:26px;max-width:1080px}
+#sc-hello .kk{font-size:28px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--pink);animation:hup .9s ease both}
+#sc-hello h1{font-size:132px;line-height:.98;font-weight:800;color:var(--ink);letter-spacing:-.02em;animation:hup .9s .15s ease both}
+#sc-hello h1 em{font-style:normal;background:linear-gradient(90deg,var(--pink),var(--lilac) 55%,var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent}
+#sc-hello .dob{font-size:40px;color:var(--lilac);font-weight:600;animation:hup .9s .3s ease both}
+#sc-hello .chips{display:flex;gap:14px;flex-wrap:wrap;animation:hup .9s .45s ease both}
+#sc-hello .chips span{font-size:28px;font-weight:600;color:var(--ink);background:#fff;border:2px solid var(--lilacL);border-radius:999px;padding:12px 24px}
+#sc-hello .chips span.fl{background:var(--ink);color:#fff;border-color:var(--ink)}
+#sc-hello .go{font-size:34px;color:var(--ink2);animation:hup .9s .6s ease both}
+@keyframes hup{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
 
 /* clock scene */
 #sc-clock{display:none;grid-template-columns:1fr 1fr}
@@ -142,6 +168,18 @@ body.st-paused .tr.now{background:var(--amberL);box-shadow:inset 8px 0 0 var(--a
         <div class="pb"><span id="phtxt"></span><div class="bar"><i id="phbar"></i></div></div>
       </div>
       <div class="cr"><span class="lb">Run sheet</span><div class="rows" id="rows"></div></div>
+    </section>
+    <section class="scene" id="sc-hello"><!--HELLO-->
+      <i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="blob b4"></i><i class="blob b5"></i>
+      <div class="ring"><i></i></div>
+      <div class="seal"><span>Expo 2027</span><b>SIM1</b><small>Belgrade</small></div>
+      <div class="hx">
+        <div class="kk">Expo 2027 Belgrade | Operations simulation</div>
+        <h1>Welcome to the <em>Simulation</em></h1>
+        <div class="dob">Dobrodošli. Thank you for being part of today.</div>
+        <div class="chips"><span class="fl" id="hfloor">Floor</span><span>Thursday 27 May 2027</span><span>Day 13 of 93</span></div>
+        <div class="go">Check in with the simulation team on your floor. Play starts at <b class="st-txt">09:45</b>.</div>
+      </div>
     </section>
     <section class="scene card" id="sc-welcome">
       <div class="k">Welcome to SIM1</div>
@@ -327,6 +365,7 @@ window.SIM_DATA = {
   // Predefined screens the control page can put on any floor.
   SCENES: [
     { id: "clock",   label: "Exercise clock and run sheet" },
+    { id: "hello",   label: "Welcome to the Simulation" },
     { id: "welcome", label: "Welcome and check-in" },
     { id: "brief",   label: "MOC briefing slides" },
     { id: "lunch",   label: "Lunch break" },
@@ -790,5 +829,6 @@ window.SIM_MENTI = {"mid": {"kicker": "Hot debrief, mid-point", "time": "11:45",
 })();
 </script><!--FLOORBOARD-END-->
 
+<script>/*HELLO*/(function(){try{var q=new URLSearchParams(location.search).get("floor"),D=window.SIM_DATA||{},f=(D.FLOORS||[]).find(function(x){return x.id===q}),el=document.getElementById("hfloor");if(!el)return;if(!f){el.style.display="none";return}el.textContent=f.id==="SC"?"Simulation Control":f.id==="G"?"Arrival, ground floor":"Floor "+f.id+" | "+f.name;}catch(e){}})();</script>
 </body>
 </html>
